@@ -7,6 +7,10 @@ This is a full-stack web app to assist in the management of osteoarthritis using
 - 🧩 Monolith: React is built and served via Flask
 - 🌐 Single-port deployment (no CORS hassle)
 
+
+![Logo](https://github.com/samadfcibd/osteo-portal/blob/samad/frontend/src/assets/osteo-ui.png)
+
+
 ---
 
 ## 📁 Project Structure
