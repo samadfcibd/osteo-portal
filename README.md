@@ -8,7 +8,7 @@ This is a full-stack web app to assist in the management of osteoarthritis using
 - 🌐 Single-port deployment (no CORS hassle)
 
 
-![Logo](../frontend/src/assets/osteo-ui.png)
+![Logo](https://github.com/samadfcibd/osteo-portal/blob/samad/frontend/src/assets/osteo-ui.png)
 
 
 ---
