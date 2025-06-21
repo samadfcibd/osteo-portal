@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import WorldMap from './WorldMap'
 import * as am5geodata_data_countries2 from "@amcharts/amcharts5-geodata/data/countries2";
 import SelectSearch from 'react-select';
@@ -9,27 +9,9 @@ const FindResources = () => {
 
     const [selectedStage, setSelectedStage] = useState('');
     const [selectedCountry, setSelectedCountry] = useState('');
+    const [showSearchBtn, setShowSearchBtn] = useState(false);
+    const [showModal, setShowModal] = useState(false);
 
-
-    // Function to focus country on amCharts map
-    const focusCountryOnMap = (countryCode) => {
-        console.log(5);
-        if (window.amChartsMap && countryCode) {
-            console.log(4)
-            // Assuming your amCharts map instance is available globally
-            // You can also pass it as a prop or use ref
-            const series = window.amChartsMap.series.getIndex(0);
-            const country = series.getDataItemById(countryCode);
-
-            if (country) {
-                // Zoom to the selected country
-                window.amChartsMap.zoomToMapObject(country.mapObject);
-
-                // Optional: Highlight the country
-                country.mapObject.isActive = true;
-            }
-        }
-    };
 
     // Handle country selection
     const handleCountryChange = (selectedOption) => {
@@ -41,13 +23,10 @@ const FindResources = () => {
         if (selectedOption?.value) {
             // Handle country selection
             console.log("Selected country:", selectedOption.value);
-            // focusCountryOnMap(selectedOption.value);
         } else {
             // Handle clear/unselect
             console.log("Country selection cleared");
-            // if (window.amChartsMap) {
-            //     window.amChartsMap.goHome();
-            // }
+
         }
     };
 
@@ -71,7 +50,11 @@ const FindResources = () => {
             continent_code: geoData[code].continent_code
         }));
 
-    // console.log("Complete Country List:", countryList);
+    const countries = countryList.map(country => ({
+        value: country.code || country.id,  // Use whichever field exists
+        label: country.name || country.country,  // Different possible name fields
+    }));
+
 
     const stages = [
         { value: '', label: 'Select Stage' },
@@ -81,26 +64,15 @@ const FindResources = () => {
         { value: 'severe', label: 'Severe Stage' }
     ];
 
-
-    const countries = countryList.map(country => ({
-        value: country.code || country.id,  // Use whichever field exists
-        label: country.name || country.country,  // Different possible name fields
-    }));
-
-
-    // const countries = [
-    //     { value: '', label: 'Select Country' },
-    //     { value: 'us', label: 'United States' },
-    //     { value: 'ca', label: 'Canada' },
-    //     { value: 'uk', label: 'United Kingdom' },
-    //     { value: 'de', label: 'Germany' },
-    //     { value: 'fr', label: 'France' },
-    //     { value: 'au', label: 'Australia' },
-    //     { value: 'jp', label: 'Japan' },
-    //     { value: 'br', label: 'Brazil' },
-    //     { value: 'in', label: 'India' },
-    //     { value: 'cn', label: 'China' }
-    // ];
+    // Check if modal should open when country changes
+    useEffect(() => {
+        if (selectedStage && selectedCountry) {
+            setShowSearchBtn(true);
+            // setShowModal(true);
+        } else {
+            setShowSearchBtn(false);
+        }
+    }, [selectedStage, selectedCountry]);
 
     return (
         <>
@@ -144,26 +116,11 @@ const FindResources = () => {
                                                     <i className="bi bi-globe me-1"></i>
                                                     Country
                                                 </label>
-                                                {/* <select
-                                                    className="form-select form-select-custom"
-                                                    value={selectedCountry}
-                                                    onChange={(e) => setSelectedCountry(e.target.value)}
-                                                >
-                                                    {countries.map((country) => (
-                                                        <option key={country.value} value={country.value}>
-                                                            {country.label}
-                                                        </option>
-                                                    ))}
-                                                </select> */}
-
-
 
                                                 <SelectSearch
                                                     options={countries}
                                                     isClearable={true}
-                                                    // value={selectedCountry}
                                                     value={countries.find(c => c.value === selectedCountry) || null}
-                                                    // onChange={(selectedCountry) => handleCountryChange(selectedCountry)}
                                                     onChange={handleCountryChange}
                                                     placeholder="Select a country"
                                                     classNamePrefix="react-select"
@@ -182,31 +139,38 @@ const FindResources = () => {
                         {/* World Map Section */}
                         <div className="card card-custom mb-4">
                             <div className="card-body">
-                                <div className="d-flex justify-content-between align-items-center mb-4">
+                                <div className="d-flex justify-content-between align-items-center mb-3">
                                     <h4 className="card-title mb-0 fw-bold">
                                         <i className="bi bi-map me-2 text-primary"></i>
                                         Global Resource Map
                                     </h4>
-                                    {/* <div className="d-flex align-items-center">
-                                        <div className="me-3">
+                                    <div className="d-flex align-items-center">
+                                        {/* <div className="me-3">
                                             <span className="badge bg-primary rounded-pill">
                                                 <i className="bi bi-circle-fill me-1" style={{ fontSize: '0.5rem' }}></i>
                                                 Resources Available
                                             </span>
-                                        </div>
-                                        <div>
+                                        </div> */}
+                                        {/* <div>
                                             <span className="badge bg-danger rounded-pill">
                                                 <i className="bi bi-circle-fill me-1" style={{ fontSize: '0.5rem' }}></i>
                                                 Active Locations
                                             </span>
+                                        </div> */}
+                                        <div className={` ${showSearchBtn ? 'show' : ''}`}
+                                            style={{ display: showSearchBtn ? 'block' : 'none' }}>
+                                            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                                                <i className="bi bi-search me-2"></i>
+                                                Search Resources
+                                            </button>
                                         </div>
-                                    </div> */}
+                                    </div>
                                 </div>
 
                                 <div className="map-container d-flex align-items-center justify-content-center">
                                     <div className="position-relative w-100">
-                                        <WorldMap country={selectedCountry} 
-                                        onCountrySelect={handleMapCountrySelect}  // Pass the callback
+                                        <WorldMap country={selectedCountry}
+                                            onCountrySelect={handleMapCountrySelect}  // Pass the callback
                                         />
                                     </div>
                                 </div>
@@ -251,6 +215,143 @@ const FindResources = () => {
                     </div>
                 </div>
             </div>
+
+
+            {/* Resources Modal */}
+            <div className={`modal fade ${showModal ? 'show' : ''}`}
+                style={{ display: showModal ? 'block' : 'none' }}
+                tabIndex="-1"
+                role="dialog">
+                <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
+                    <div className="modal-content">
+                        <div className="modal-header bg-primary text-white">
+                            <h5 className="modal-title">
+                                <i className="bi bi-clipboard-data me-2"></i>
+                                Available Resources
+                            </h5>
+                            <button
+                                type="button"
+                                className="btn-close btn-close-white"
+                                onClick={() => setShowModal(false)}
+                            ></button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="row mb-4">
+                                <div className="col-md-6">
+                                    <div className="card bg-light">
+                                        <div className="card-body text-center">
+                                            <i className="bi bi-clipboard-check display-4 text-primary mb-2"></i>
+                                            <h6 className="card-title">Selected Stage</h6>
+                                            <p className="card-text fw-bold text-primary">
+                                                {stages.find(s => s.value === selectedStage)?.label}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="col-md-6">
+                                    <div className="card bg-light">
+                                        <div className="card-body text-center">
+                                            <i className="bi bi-globe display-4 text-success mb-2"></i>
+                                            <h6 className="card-title">Selected Country</h6>
+                                            <p className="card-text fw-bold text-success">
+                                                {countries.find(c => c.value === selectedCountry)?.label}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="row">
+                                <div className="col-12">
+                                    <h6 className="mb-3">
+                                        <i className="bi bi-list-ul me-2"></i>
+                                        Recommended Natural Resources:
+                                    </h6>
+                                    <div className="list-group">
+                                        <div className="list-group-item d-flex align-items-center">
+                                            <i className="bi bi-check-circle-fill text-success me-3"></i>
+                                            <div>
+                                                <h6 className="mb-1">Turmeric Supplements</h6>
+                                                <p className="mb-1 text-muted">Anti-inflammatory properties help reduce joint pain</p>
+                                                <small className="text-success">Available in your region</small>
+                                            </div>
+                                        </div>
+                                        <div className="list-group-item d-flex align-items-center">
+                                            <i className="bi bi-check-circle-fill text-success me-3"></i>
+                                            <div>
+                                                <h6 className="mb-1">Omega-3 Fish Oil</h6>
+                                                <p className="mb-1 text-muted">Reduces inflammation and joint stiffness</p>
+                                                <small className="text-success">Available in your region</small>
+                                            </div>
+                                        </div>
+                                        <div className="list-group-item d-flex align-items-center">
+                                            <i className="bi bi-check-circle-fill text-success me-3"></i>
+                                            <div>
+                                                <h6 className="mb-1">Glucosamine & Chondroitin</h6>
+                                                <p className="mb-1 text-muted">Supports cartilage health and joint mobility</p>
+                                                <small className="text-success">Available in your region</small>
+                                            </div>
+                                        </div>
+                                        <div className="list-group-item d-flex align-items-center">
+                                            <i className="bi bi-exclamation-circle-fill text-warning me-3"></i>
+                                            <div>
+                                                <h6 className="mb-1">Acupuncture Therapy</h6>
+                                                <p className="mb-1 text-muted">Traditional treatment for pain management</p>
+                                                <small className="text-warning">Limited availability - check local providers</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="alert alert-info mt-4">
+                                <i className="bi bi-info-circle me-2"></i>
+                                <strong>Note:</strong> Always consult with your healthcare provider before starting any new treatment or supplement regimen.
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={() => setShowModal(false)}
+                            >
+                                <i className="bi bi-x-circle me-1"></i>
+                                Close
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-primary-custom"
+                                onClick={() => {
+                                    // Handle save/bookmark functionality
+                                    alert('Resources saved to your profile!');
+                                }}
+                            >
+                                <i className="bi bi-bookmark-plus me-1"></i>
+                                Save Resources
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-success"
+                                onClick={() => {
+                                    // Handle print/export functionality
+                                    window.print();
+                                }}
+                            >
+                                <i className="bi bi-printer me-1"></i>
+                                Print Resources
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Modal Backdrop */}
+            {showModal && (
+                <div
+                    className="modal-backdrop fade show"
+                    onClick={() => setShowModal(false)}
+                ></div>
+            )}
         </>
     )
 }
