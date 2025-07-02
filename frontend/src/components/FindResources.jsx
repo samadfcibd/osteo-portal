@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react'
 import WorldMap from './WorldMap'
+import ResourcesModal from './ResourcesModal'
 import * as am5geodata_data_countries2 from "@amcharts/amcharts5-geodata/data/countries2";
 import SelectSearch from 'react-select';
+import axios from 'axios';
+
 
 
 
 const FindResources = () => {
 
+    const [stages, setStage] = useState([]);
     const [selectedStage, setSelectedStage] = useState('');
     const [selectedCountry, setSelectedCountry] = useState('');
     const [showSearchBtn, setShowSearchBtn] = useState(false);
@@ -56,16 +60,29 @@ const FindResources = () => {
     }));
 
 
-    const stages = [
-        { value: '', label: 'Select Stage' },
-        { value: 'early', label: 'Minor Stage' },
-        { value: 'moderate', label: 'Mild Stage' },
-        { value: 'advanced', label: 'Moderate Stage' },
-        { value: 'severe', label: 'Severe Stage' }
-    ];
+    // Fetch clinical stages only once on component mount
+    useEffect(() => {
+
+        const fetchClinicalStages = async () => {
+            try {
+                const response = await axios.get(import.meta.env.VITE_API_URL + '/api/clinical-stages');
+                if (response.data.success) {
+                    setStage(response.data.data);
+                } else {
+                    // Alert error
+                }
+
+            } catch (error) {
+                console.error('Error fetching stages:', error);
+            }
+        };
+
+        fetchClinicalStages();
+    }, []); // Empty dependency array means it runs only once
 
     // Check if modal should open when country changes
     useEffect(() => {
+
         if (selectedStage && selectedCountry) {
             setShowSearchBtn(true);
             // setShowModal(true);
@@ -105,8 +122,8 @@ const FindResources = () => {
                                                     onChange={(e) => setSelectedStage(e.target.value)}
                                                 >
                                                     {stages.map((stage) => (
-                                                        <option key={stage.value} value={stage.value}>
-                                                            {stage.label}
+                                                        <option key={stage.stage_id} value={stage.stage_id}>
+                                                            {stage.stage_name}
                                                         </option>
                                                     ))}
                                                 </select>
@@ -217,141 +234,14 @@ const FindResources = () => {
             </div>
 
 
-            {/* Resources Modal */}
-            <div className={`modal fade ${showModal ? 'show' : ''}`}
-                style={{ display: showModal ? 'block' : 'none' }}
-                tabIndex="-1"
-                role="dialog">
-                <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
-                    <div className="modal-content">
-                        <div className="modal-header bg-primary text-white">
-                            <h5 className="modal-title">
-                                <i className="bi bi-clipboard-data me-2"></i>
-                                Available Resources
-                            </h5>
-                            <button
-                                type="button"
-                                className="btn-close btn-close-white"
-                                onClick={() => setShowModal(false)}
-                            ></button>
-                        </div>
-                        <div className="modal-body">
-                            <div className="row mb-4">
-                                <div className="col-md-6">
-                                    <div className="card bg-light">
-                                        <div className="card-body text-center">
-                                            <i className="bi bi-clipboard-check display-4 text-primary mb-2"></i>
-                                            <h6 className="card-title">Selected Stage</h6>
-                                            <p className="card-text fw-bold text-primary">
-                                                {stages.find(s => s.value === selectedStage)?.label}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-md-6">
-                                    <div className="card bg-light">
-                                        <div className="card-body text-center">
-                                            <i className="bi bi-globe display-4 text-success mb-2"></i>
-                                            <h6 className="card-title">Selected Country</h6>
-                                            <p className="card-text fw-bold text-success">
-                                                {countries.find(c => c.value === selectedCountry)?.label}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="row">
-                                <div className="col-12">
-                                    <h6 className="mb-3">
-                                        <i className="bi bi-list-ul me-2"></i>
-                                        Recommended Natural Resources:
-                                    </h6>
-                                    <div className="list-group">
-                                        <div className="list-group-item d-flex align-items-center">
-                                            <i className="bi bi-check-circle-fill text-success me-3"></i>
-                                            <div>
-                                                <h6 className="mb-1">Turmeric Supplements</h6>
-                                                <p className="mb-1 text-muted">Anti-inflammatory properties help reduce joint pain</p>
-                                                <small className="text-success">Available in your region</small>
-                                            </div>
-                                        </div>
-                                        <div className="list-group-item d-flex align-items-center">
-                                            <i className="bi bi-check-circle-fill text-success me-3"></i>
-                                            <div>
-                                                <h6 className="mb-1">Omega-3 Fish Oil</h6>
-                                                <p className="mb-1 text-muted">Reduces inflammation and joint stiffness</p>
-                                                <small className="text-success">Available in your region</small>
-                                            </div>
-                                        </div>
-                                        <div className="list-group-item d-flex align-items-center">
-                                            <i className="bi bi-check-circle-fill text-success me-3"></i>
-                                            <div>
-                                                <h6 className="mb-1">Glucosamine & Chondroitin</h6>
-                                                <p className="mb-1 text-muted">Supports cartilage health and joint mobility</p>
-                                                <small className="text-success">Available in your region</small>
-                                            </div>
-                                        </div>
-                                        <div className="list-group-item d-flex align-items-center">
-                                            <i className="bi bi-exclamation-circle-fill text-warning me-3"></i>
-                                            <div>
-                                                <h6 className="mb-1">Acupuncture Therapy</h6>
-                                                <p className="mb-1 text-muted">Traditional treatment for pain management</p>
-                                                <small className="text-warning">Limited availability - check local providers</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="alert alert-info mt-4">
-                                <i className="bi bi-info-circle me-2"></i>
-                                <strong>Note:</strong> Always consult with your healthcare provider before starting any new treatment or supplement regimen.
-                            </div>
-                        </div>
-                        <div className="modal-footer">
-                            <button
-                                type="button"
-                                className="btn btn-secondary"
-                                onClick={() => setShowModal(false)}
-                            >
-                                <i className="bi bi-x-circle me-1"></i>
-                                Close
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-primary-custom"
-                                onClick={() => {
-                                    // Handle save/bookmark functionality
-                                    alert('Resources saved to your profile!');
-                                }}
-                            >
-                                <i className="bi bi-bookmark-plus me-1"></i>
-                                Save Resources
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-success"
-                                onClick={() => {
-                                    // Handle print/export functionality
-                                    window.print();
-                                }}
-                            >
-                                <i className="bi bi-printer me-1"></i>
-                                Print Resources
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Modal Backdrop */}
-            {showModal && (
-                <div
-                    className="modal-backdrop fade show"
-                    onClick={() => setShowModal(false)}
-                ></div>
-            )}
+            <ResourcesModal
+                showModal={showModal}
+                setShowModal={setShowModal}
+                selectedStage={selectedStage}
+                selectedCountry={selectedCountry}
+                stages={stages}
+                countries={countries}
+            />
         </>
     )
 }
