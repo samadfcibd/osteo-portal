@@ -4,6 +4,18 @@ import { Spinner, Pagination } from 'react-bootstrap';
 import OrganismTableRow from './OrganismTableRow';
 import RatingModal from './RatingModal';
 import ReviewsModal from './ReviewsModal';
+// Import at the top of your component file
+import {
+    getCachedSpeciesMatch,
+    setCachedSpeciesMatch,
+    getCachedVernacularNames,
+    setCachedVernacularNames,
+    getCachedOccurrence,
+    setCachedOccurrence,
+    getCachedImages,
+    setCachedImages,
+    cleanExpiredCache
+} from '../services/cacheUtils';
 
 // Constants
 const INITIAL_PAGINATION = {
@@ -41,47 +53,180 @@ const useApi = () => {
     }), [baseURL]);
 };
 
+
+
+// const useGbifEnrichment = (selectedCountry) => {
+//     const enrichWithGbifData = useCallback(async (organismsList) => {
+//         const enriched = await Promise.allSettled(
+//             organismsList.map(async (org) => {
+//                 try {
+//                     const [occurrenceRes, imageRes] = await Promise.all([
+//                         axios.get("https://api.gbif.org/v1/occurrence/search", {
+//                             params: {
+//                                 scientificName: org.organism_name,
+//                                 country: selectedCountry,
+//                                 limit: 0
+//                             }
+//                         }),
+//                         axios.get("https://api.gbif.org/v1/occurrence/search", {
+//                             params: {
+//                                 scientificName: org.organism_name,
+//                                 mediaType: "StillImage",
+//                                 limit: 2,
+//                                 hasCoordinate: true,
+//                                 hasGeospatialIssue: false
+//                             }
+//                         })
+//                     ]);
+
+//                     const found = occurrenceRes.data.count > 0;
+//                     const images = imageRes.data.results.flatMap(r => r.media?.map(m => m.identifier) || []);
+//                     const kingdom = imageRes?.data?.results?.[0]?.kingdom ?? org.organism_type;
+
+//                     return {
+//                         ...org,
+//                         gbifKingdom: kingdom,
+//                         gbifFound: found,
+//                         gbifImages: images
+//                     };
+//                 } catch (error) {
+//                     console.warn(`GBIF error for ${org.organism_name}`, error);
+//                     return {
+//                         ...org,
+//                         gbifKingdom: org.organism_type,
+//                         gbifFound: false,
+//                         gbifImages: []
+//                     };
+//                 }
+//             })
+//         );
+
+//         return enriched.map(result =>
+//             result.status === 'fulfilled' ? result.value : result.reason
+//         );
+//     }, [selectedCountry]);
+
+//     return { enrichWithGbifData };
+// };
+
+
 const useGbifEnrichment = (selectedCountry) => {
     const enrichWithGbifData = useCallback(async (organismsList) => {
         const enriched = await Promise.allSettled(
             organismsList.map(async (org) => {
                 try {
-                    const [occurrenceRes, imageRes] = await Promise.all([
-                        axios.get("https://api.gbif.org/v1/occurrence/search", {
-                            params: {
-                                scientificName: org.organism_name,
-                                country: selectedCountry,
-                                limit: 0
-                            }
-                        }),
-                        axios.get("https://api.gbif.org/v1/occurrence/search", {
-                            params: {
-                                scientificName: org.organism_name,
-                                mediaType: "StillImage",
-                                limit: 2,
-                                hasCoordinate: true,
-                                hasGeospatialIssue: false
-                            }
-                        })
-                    ]);
+                    // Step 1: Fetch species match data (with caching)
+                    let matchRes;
+                    const cachedMatch = getCachedSpeciesMatch(org.organism_name);
+
+                    if (cachedMatch) {
+                        matchRes = { data: cachedMatch };
+                    } else {
+                        matchRes = await axios.get("https://api.gbif.org/v1/species/match", {
+                            params: { name: org.organism_name }
+                        });
+                        // setCachedSpeciesMatch(org.organism_name, matchRes.data);
+                    }
+
+                    const taxonKey = matchRes.data.usageKey;
+                    const kingdom = matchRes.data.kingdom || org.organism_type || "Unknown";
+
+                    // Step 2: Fetch vernacular names (with caching and deduplication)
+                    let englishVernacularNames = [];
+                    const needsApiCall = !matchRes.data.vernacularNames?.some(name => name.language === "en");
+
+                    if (needsApiCall && taxonKey) {
+                        const cachedNames = getCachedVernacularNames(taxonKey);
+
+                        if (cachedNames) {
+                            englishVernacularNames = cachedNames;
+                        } else {
+                            const vernacularRes = await axios.get(
+                                `https://api.gbif.org/v1/species/${taxonKey}/vernacularNames`,
+                                { params: { language: "en" } }
+                            );
+
+                            const allNames = (vernacularRes.data.results || [])
+                                .filter(name => name.language === "en" || name.language === "eng")
+                                .map(name => name.vernacularName);
+
+                            englishVernacularNames = [...new Map(
+                                allNames.map(name => [name.toLowerCase(), name])
+                            ).values()];
+
+                            // setCachedVernacularNames(taxonKey, englishVernacularNames);
+                        }
+                    } else {
+                        englishVernacularNames = [
+                            ...new Map(
+                                (matchRes.data.vernacularNames || [])
+                                    .filter(name => name.language === "en")
+                                    .map(name => [name.toLowerCase(), name])
+                            ).values()
+                        ];
+                    }
+
+                    // Step 3: Fetch occurrence and images (with caching)
+                    let occurrenceRes, imageRes;
+                    const cachedOccurrence = getCachedOccurrence(taxonKey, selectedCountry);
+                    const cachedImages = getCachedImages(taxonKey);
+
+                    if (cachedOccurrence && cachedImages) {
+                        occurrenceRes = { data: cachedOccurrence };
+                        imageRes = { data: cachedImages };
+                    } else {
+                        [occurrenceRes, imageRes] = await Promise.all([
+                            cachedOccurrence
+                                ? { data: cachedOccurrence }
+                                : axios.get("https://api.gbif.org/v1/occurrence/search", {
+                                    params: {
+                                        taxonKey: taxonKey || undefined,
+                                        scientificName: taxonKey ? undefined : org.organism_name,
+                                        country: selectedCountry,
+                                        limit: 0
+                                    }
+                                }),
+                            cachedImages
+                                ? { data: cachedImages }
+                                : axios.get("https://api.gbif.org/v1/occurrence/search", {
+                                    params: {
+                                        taxonKey: taxonKey || undefined,
+                                        scientificName: taxonKey ? undefined : org.organism_name,
+                                        mediaType: "StillImage",
+                                        limit: 2,
+                                        hasCoordinate: true,
+                                        hasGeospatialIssue: false
+                                    }
+                                })
+                        ]);
+
+                        if (!cachedOccurrence) {
+                            // setCachedOccurrence(taxonKey, selectedCountry, occurrenceRes.data);
+                        }
+                        if (!cachedImages) {
+                            // setCachedImages(taxonKey, imageRes.data);
+                        }
+                    }
 
                     const found = occurrenceRes.data.count > 0;
                     const images = imageRes.data.results.flatMap(r => r.media?.map(m => m.identifier) || []);
-                    const kingdom = imageRes?.data?.results?.[0]?.kingdom ?? org.organism_type;
 
                     return {
                         ...org,
                         gbifKingdom: kingdom,
                         gbifFound: found,
-                        gbifImages: images
+                        gbifImages: images,
+                        vernacularNames: englishVernacularNames
                     };
+
                 } catch (error) {
                     console.warn(`GBIF error for ${org.organism_name}`, error);
                     return {
                         ...org,
                         gbifKingdom: org.organism_type,
                         gbifFound: false,
-                        gbifImages: []
+                        gbifImages: [],
+                        vernacularNames: []
                     };
                 }
             })
@@ -95,8 +240,9 @@ const useGbifEnrichment = (selectedCountry) => {
     return { enrichWithGbifData };
 };
 
+
 // Main Component
-const ResourcesModal = ({ showModal, setShowModal, selectedStage, selectedCountry, stages, countries }) => {
+const ResourcesModal_FINAL = ({ showModal, setShowModal, selectedStage, selectedCountry, stages, countries }) => {
     // State management
     const [organisms, setOrganisms] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -190,10 +336,26 @@ const ResourcesModal = ({ showModal, setShowModal, selectedStage, selectedCountr
     }, [fetchOrganismList]);
 
     // Effects
+    // useEffect(() => {
+    //     if (selectedStage && showModal) {
+    //         fetchOrganismList();
+    //     }
+    // }, [selectedStage, showModal, fetchOrganismList]);
+
+    // Combined useEffect for both cache cleanup and organism fetching
     useEffect(() => {
+        // 1. Clean expired cache entries on first render and periodically
+        cleanExpiredCache();
+
+        // 2. Run your existing organism fetch logic
         if (selectedStage && showModal) {
             fetchOrganismList();
         }
+
+        // Optional: Set up periodic cache cleanup (every 10 minutes)
+        const cleanupInterval = setInterval(cleanExpiredCache, 10 * 60 * 1000);
+
+        return () => clearInterval(cleanupInterval);
     }, [selectedStage, showModal, fetchOrganismList]);
 
     // Computed values
@@ -375,7 +537,7 @@ const ResourcesModal = ({ showModal, setShowModal, selectedStage, selectedCountr
                             >
                                 <i className="bi bi-x-circle me-1"></i>Close
                             </button>
-                            <button
+                            {/* <button
                                 type="button"
                                 className="btn btn-primary-custom"
                                 onClick={() => alert('Resources saved to your profile!')}
@@ -390,7 +552,7 @@ const ResourcesModal = ({ showModal, setShowModal, selectedStage, selectedCountr
                                 disabled={loading || organisms.length === 0}
                             >
                                 <i className="bi bi-printer me-1"></i>Print Resources
-                            </button>
+                            </button> */}
                         </div>
                     </div>
                 </div>
@@ -420,4 +582,4 @@ const ResourcesModal = ({ showModal, setShowModal, selectedStage, selectedCountr
     );
 };
 
-export default ResourcesModal;
+export default ResourcesModal_FINAL;

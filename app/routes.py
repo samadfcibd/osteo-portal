@@ -1,6 +1,14 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, current_app
 from app.db import get_db_connection
 import pprint
+
+import re
+import os
+from collections import namedtuple
+
+
+import requests
+from bs4 import BeautifulSoup
 
 
 bp = Blueprint('main', __name__)
@@ -113,6 +121,68 @@ def get_clinical_stages():
 #             conn.close()
 
 
+def load_organism_data():
+    """Parse the speclist.txt file and return a dictionary of scientific_name: common_name"""
+    organism_data = {}
+    # Construct the absolute path to the data file
+    data_dir = os.path.join(current_app.root_path, 'app/data')
+    file_path = os.path.join(data_dir, 'speclist.txt')
+
+    with open(file_path, 'r', encoding='utf-8') as file:
+        lines = file.readlines()
+        
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            
+            if re.match(r'^[A-Z0-9]{4,5} [A-Z]?\s+\d+:.*', line):
+                # Check next lines for scientific name (N=) and common name (C=)
+                sci_name = None
+                common_name = None
+                
+                for j in range(i+1, min(i+4, len(lines))):
+                    next_line = lines[j].strip()
+                    if next_line.startswith('N='):
+                        sci_name = next_line[2:].strip()
+                    elif next_line.startswith('C='):
+                        common_name = next_line[2:].strip()
+                        break
+                
+                if sci_name and common_name:
+                    organism_data[sci_name.lower()] = common_name
+                    i = j
+                else:
+                    i += 1
+            else:
+                i += 1
+    return organism_data
+
+
+
+def get_english_name(scientific_name,  language="English"):
+    base_url = "https://sciname.info/Default.asp"
+    params = {"SciName": scientific_name}
+
+    response = requests.get(base_url, params=params)
+    soup = BeautifulSoup(response.content, "html.parser")
+
+    tables = soup.find_all("table")
+    results = []
+
+    for table in tables:
+        rows = table.find_all("tr")
+        for row in rows:
+            cells = row.find_all("td")
+            if len(cells) >= 2:
+                key = cells[0].get_text(strip=True)
+                val = cells[1].get_text(strip=True)
+                if key.startswith(f"{language}:"):
+                    results.append(val)
+
+    return results
+    
+
+
 @bp.route("/api/organisms")
 def get_organisms():
     try:
@@ -166,11 +236,23 @@ def get_organisms():
 
         conn.close()
         
+
+        # Load the organism data once at startup
+        # organism_lookup = load_organism_data()
+
         # Format the response with proper null handling
         formatted_results = []
         for row in results:
+
+            # Get the organism name from the row
+            organism_name = row['organism_name']
+    
+            # Look up the common name (case-insensitive)
+            common_name = get_english_name(organism_name)
+    
             formatted_row = {
                 **row,
+                'food': common_name,  # Add the common name as 'food'
                 'rating': {
                     'average_rating': float(row['average_rating']) if row['average_rating'] is not None else None,
                     'review_count': row['review_count'],

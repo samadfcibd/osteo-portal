@@ -467,7 +467,7 @@ const ResourcesModal = ({
                                 <i className="bi bi-x-circle me-1"></i>
                                 Close
                             </button>
-                            <button
+                            {/* <button
                                 type="button"
                                 className="btn btn-primary-custom"
                                 onClick={() => alert('Resources saved to your profile!')}
@@ -484,7 +484,7 @@ const ResourcesModal = ({
                             >
                                 <i className="bi bi-printer me-1"></i>
                                 Print Resources
-                            </button>
+                            </button> */}
                         </div>
                     </div>
                 </div>

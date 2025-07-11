@@ -12,15 +12,25 @@ const OrganismTableRow = ({ organism, onRate, onViewReviews }) => (
                 </div>
             </div>
         </td>
-        <td>
+        <td style={{ maxWidth: "200px" }}>
             <div className="d-flex flex-wrap gap-1">
-                <span className="badge bg-light text-dark">Turmeric</span>
+                {/* <span className="badge bg-light text-dark">Turmeric</span>
                 <span className="badge bg-light text-dark">Fish Oil</span>
-                <span className="badge bg-light text-dark">Leafy Greens</span>
+                <span className="badge bg-light text-dark">Leafy Greens</span> */}
+
+                {organism.vernacularNames?.length > 0 ? (
+                    organism.vernacularNames.map((name, index) => (
+                        <span key={index} className="badge bg-success text-light" style={{whiteSpace: "wrap"}}>
+                            {name}
+                        </span>
+                    ))
+                ) : (
+                    <span className="badge bg-light text-dark">No common names found</span>
+                )}
             </div>
         </td>
         <td>
-            <StarRating rating={organism.rating} />
+            {/* <StarRating rating={organism.rating} />
             <div className="d-flex gap-2 mt-1">
                 <button
                     className="btn btn-sm btn-outline-primary"
@@ -34,7 +44,9 @@ const OrganismTableRow = ({ organism, onRate, onViewReviews }) => (
                 >
                     <i className="bi bi-chat-square-text me-1"></i>Reviews
                 </button>
-            </div>
+            </div> */}
+
+            <span className="text-muted">No ratings yet</span>
         </td>
         <td>
             <div className="d-flex">
