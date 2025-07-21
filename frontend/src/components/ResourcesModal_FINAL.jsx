@@ -125,7 +125,7 @@ const useGbifEnrichment = (selectedCountry) => {
                         matchRes = await axios.get("https://api.gbif.org/v1/species/match", {
                             params: { name: org.organism_name }
                         });
-                        // setCachedSpeciesMatch(org.organism_name, matchRes.data);
+                        setCachedSpeciesMatch(org.organism_name, matchRes.data);
                     }
 
                     const taxonKey = matchRes.data.usageKey;
@@ -154,7 +154,7 @@ const useGbifEnrichment = (selectedCountry) => {
                                 allNames.map(name => [name.toLowerCase(), name])
                             ).values()];
 
-                            // setCachedVernacularNames(taxonKey, englishVernacularNames);
+                            setCachedVernacularNames(taxonKey, englishVernacularNames);
                         }
                     } else {
                         englishVernacularNames = [
@@ -201,10 +201,10 @@ const useGbifEnrichment = (selectedCountry) => {
                         ]);
 
                         if (!cachedOccurrence) {
-                            // setCachedOccurrence(taxonKey, selectedCountry, occurrenceRes.data);
+                            setCachedOccurrence(taxonKey, selectedCountry, occurrenceRes.data);
                         }
                         if (!cachedImages) {
-                            // setCachedImages(taxonKey, imageRes.data);
+                            setCachedImages(taxonKey, imageRes.data);
                         }
                     }
 

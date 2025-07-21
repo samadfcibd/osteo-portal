@@ -206,10 +206,11 @@ def get_organisms():
         query = """
             SELECT 
                 rd.*, 
-                p.protein_name, 
-                c.compound_name, 
+                group_CONCAT(DISTINCT(p.protein_name), "###") as protein_name,
+                group_CONCAT(DISTINCT(c.compound_name), "###") as compound_name, 
                 o.organism_name, 
                 o.organism_type,
+                mm.file_path as model_file,
                 COALESCE(ROUND(AVG(ort.rating), 1), NULL) as average_rating,
                 COUNT(ort.id) as review_count,
                 COUNT(CASE WHEN ort.review IS NOT NULL AND ort.review != '' THEN 1 END) as reviews_with_text
@@ -218,8 +219,9 @@ def get_organisms():
             LEFT JOIN compounds c ON c.compound_id = rd.compound_id
             LEFT JOIN organisms o ON o.organism_id = rd.organism_id
             LEFT JOIN organism_ratings ort ON ort.organism_id = o.organism_id
+            LEFT JOIN molecular_models mm on mm.protein_id = p.protein_id and mm.compound_id = c.compound_id
             WHERE rd.stage_id = %s
-            GROUP BY rd.data_id, o.organism_name
+            GROUP BY rd.organism_id
             LIMIT %s OFFSET %s
         """
         cursor.execute(query, (stage, per_page, offset))
@@ -260,6 +262,15 @@ def get_organisms():
                 } if row['review_count'] > 0 else None
             }
             formatted_results.append(formatted_row)
+
+        # Sort by average_rating (highest first)
+        formatted_results.sort(
+            key=lambda x: (
+                -x['rating']['average_rating'] 
+                if x['rating'] and x['rating']['average_rating'] is not None 
+                else float('inf')  # Put None ratings at the end
+            )
+        )
         
         return jsonify({
             'success': True,

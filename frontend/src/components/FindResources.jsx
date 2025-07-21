@@ -94,7 +94,7 @@ const FindResources = () => {
 
     return (
         <>
-            <div className="container" style={{ marginTop: '80px' }}>
+            <div className="container">
                 <div className="row">
                     <div className="col-12">
                         {/* Filter Section */}
