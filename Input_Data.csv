@@ -1,0 +1,4 @@
+﻿protein_name,stage_id,compound_name,compound_IUPAC,organism_type
+H1A,"1, 2, 3, 4",YW_dipeptide,2-[[2-amino-3-(4-hydroxyphenyl)propanoyl]amino]-3-(1~{H}-indol-3-yl)propanoic acid,Bison bison|Sus scrofa|Bubalus bubalis|Gallus gallus|Odocoileus|Anas platyrhynchos|Cervus canadensis|Dromaius novaehollandiae|Anser anser|Numida meleagris|Equus caballus|Struthio camelus|Melanitta fusca|Phasianus colchicus|Oryctolagus|Ovis aries|Columba|Meleagris gallopavo|Bos taurus|Cervidae|Leporidae|Capra hircus|Bos taurus x Bison bison|Sus scrofa domesticus|Phasianidae|Anatidae|Lepus timidus|Lagopus muta|Columbidae
+H2B,"1,2",indole-3-acetyl-phenylalanine,2-[[2-(1~{H}-indol-3-yl)acetyl]amino]-3-phenyl-propanoic acid,Arabidopsis thaliana
+H3C,"1, 2, 3",Americanol_A,"4-[(2~{R},3~{R})-3-(hydroxymethyl)-6-[(~{E})-3-hydroxyprop-1-enyl]-2,3-dihydro-1,4-benzodioxin-2-yl]benzene-1,2-diol",Capparis Flavicans|Morinda citrifolia|Phytolacca americana
