@@ -76,7 +76,7 @@ pip freeze > requirements.txt
 ```bash
 cd ..
 source venv/bin/activate      # or `venv\Scripts\activate`
-python run.py
+python3 run.py
 ```
 
 Visit 📍 http://localhost:5000
