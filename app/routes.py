@@ -232,6 +232,7 @@ def get_organisms():
             SELECT COUNT(*) as total 
             FROM research_data rd
             WHERE rd.stage_id = %s
+            GROUP BY rd.organism_id
         """
         cursor.execute(count_query, (stage,))
         total = cursor.fetchone()['total']
