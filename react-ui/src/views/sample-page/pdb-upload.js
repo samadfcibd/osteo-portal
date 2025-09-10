@@ -8,27 +8,25 @@ import {
     Box,
     Input,
     FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
     FormHelperText,
     CircularProgress,
-    LinearProgress
+    LinearProgress,
+    TextField,
+    Autocomplete
 } from '@material-ui/core';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 
 // project imports
 import MainCard from '../../ui-component/cards/MainCard';
-
 import configData from '../../../src/config';
 import axios from 'axios';
 
 //==============================|| Protein Compound Upload ||==============================//
 
 const PdbUpload = () => {
-    const [protein, setProtein] = useState('');
-    const [compound, setCompound] = useState('');
+    const [protein, setProtein] = useState(null);
+    const [compound, setCompound] = useState(null);
     const [file, setFile] = useState(null);
     const [proteins, setProteins] = useState([]);
     const [compounds, setCompounds] = useState([]);
@@ -42,7 +40,7 @@ const PdbUpload = () => {
 
     // Fetch proteins from API
     useEffect(() => {
-
+        setProteinLoading(true);
         const fetchProteins = async () => {
             try {
                 const response = await axios.get(process.env.REACT_APP_BACKEND_SERVER + 'proteins');
@@ -52,9 +50,9 @@ const PdbUpload = () => {
                     console.error('Error fetching proteins:', response.data.message);
                     setError(response.data.message || 'Failed to load proteins');
                 }
-
             } catch (error) {
                 console.error('Error fetching proteins:', error);
+                setError('Failed to load proteins');
             } finally {
                 setProteinLoading(false);
             }
@@ -65,7 +63,7 @@ const PdbUpload = () => {
 
     // Fetch compounds from API
     useEffect(() => {
-
+        setCompoundLoading(true);
         const fetchCompounds = async () => {
             try {
                 const response = await axios.get(process.env.REACT_APP_BACKEND_SERVER + 'compounds');
@@ -75,9 +73,9 @@ const PdbUpload = () => {
                     console.error('Error fetching compounds:', response.data.message);
                     setError(response.data.message || 'Failed to load compounds');
                 }
-
             } catch (error) {
                 console.error('Error fetching compounds:', error);
+                setError('Failed to load compounds');
             } finally {
                 setCompoundLoading(false);
             }
@@ -86,13 +84,13 @@ const PdbUpload = () => {
         fetchCompounds();
     }, [account.token]);
 
-    const handleProteinChange = (e) => {
-        setProtein(e.target.value);
+    const handleProteinChange = (event, newValue) => {
+        setProtein(newValue);
         setError('');
     };
 
-    const handleCompoundChange = (e) => {
-        setCompound(e.target.value);
+    const handleCompoundChange = (event, newValue) => {
+        setCompound(newValue);
         setError('');
     };
 
@@ -117,8 +115,8 @@ const PdbUpload = () => {
         }
 
         const formData = new FormData();
-        formData.append('protein', protein);
-        formData.append('compound', compound);
+        formData.append('protein', protein.protein_id);
+        formData.append('compound', compound.compound_id);
         formData.append('file', file);
         formData.append('token', `${account.token}`);
 
@@ -139,8 +137,8 @@ const PdbUpload = () => {
             );
 
             setSuccess(response.data.message || 'Data uploaded successfully!');
-            setProtein('');
-            setCompound('');
+            setProtein(null);
+            setCompound(null);
             setFile(null);
 
             // Clear the file input
@@ -169,45 +167,67 @@ const PdbUpload = () => {
             </Typography>
 
             <form onSubmit={handleSubmit}>
-                {/* Protein Select Field */}
+                {/* Protein Search Select Field */}
                 <Box mt={2} mb={3}>
                     <FormControl fullWidth error={Boolean(error && !protein)}>
-                        <InputLabel id="protein-select-label">Protein</InputLabel>
-                        <Select
-                            labelId="protein-select-label"
-                            id="protein-select"
+                        <Autocomplete
+                            id="protein-search"
+                            options={proteins}
+                            getOptionLabel={(option) => option.protein_name}
                             value={protein}
                             onChange={handleProteinChange}
-                            disabled={proteinLoading || loading}
-                        >
-                            {proteins.map((protein) => (
-                                <MenuItem key={protein.protein_id} value={protein.protein_id}>
-                                    {protein.protein_name}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                        {proteinLoading && <FormHelperText>Loading proteins...</FormHelperText>}
+                            loading={proteinLoading}
+                            disabled={loading}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label="Search and select protein"
+                                    variant="outlined"
+                                    InputProps={{
+                                        ...params.InputProps,
+                                        endAdornment: (
+                                            <React.Fragment>
+                                                {proteinLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                                                {params.InputProps.endAdornment}
+                                            </React.Fragment>
+                                        ),
+                                    }}
+                                />
+                            )}
+                            noOptionsText={proteinLoading ? "Loading proteins..." : "No proteins found"}
+                        />
                     </FormControl>
                 </Box>
 
-                {/* Compound Select Field */}
+                {/* Compound Search Select Field */}
                 <Box mb={3}>
                     <FormControl fullWidth error={Boolean(error && !compound)}>
-                        <InputLabel id="compound-select-label">Compound</InputLabel>
-                        <Select
-                            labelId="compound-select-label"
-                            id="compound-select"
+                        <Autocomplete
+                            id="compound-search"
+                            options={compounds}
+                            getOptionLabel={(option) => option.compound_name}
                             value={compound}
                             onChange={handleCompoundChange}
-                            disabled={compoundLoading || loading}
-                        >
-                            {compounds.map((compound) => (
-                                <MenuItem key={compound.compound_id} value={compound.compound_id}>
-                                    {compound.compound_name}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                        {compoundLoading && <FormHelperText>Loading compounds...</FormHelperText>}
+                            loading={compoundLoading}
+                            disabled={loading}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label="Search and select compound"
+                                    variant="outlined"
+                                    InputProps={{
+                                        ...params.InputProps,
+                                        endAdornment: (
+                                            <React.Fragment>
+                                                {compoundLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                                                {params.InputProps.endAdornment}
+                                            </React.Fragment>
+                                        ),
+                                    }}
+                                />
+                            )}
+                            noOptionsText={compoundLoading ? "Loading compounds..." : "No compounds found"}
+                        />
                     </FormControl>
                 </Box>
 

@@ -222,7 +222,8 @@ const ProfileSection = () => {
                 className={classes.profileChip}
                 icon={
                     <Avatar
-                        src={User1}
+                        src=''
+                        // src={User1}
                         className={classes.headerAvatar}
                         ref={anchorRef}
                         aria-controls={open ? 'menu-list-grow' : undefined}
@@ -273,7 +274,7 @@ const ProfileSection = () => {
                                                 <Typography variant="subtitle2">Project Admin</Typography>
                                             </Grid>
                                         </Grid>
-                                        <OutlinedInput
+                                        {/* <OutlinedInput
                                             className={classes.searchControl}
                                             id="input-search-profile"
                                             value={value}
@@ -288,12 +289,12 @@ const ProfileSection = () => {
                                             inputProps={{
                                                 'aria-label': 'weight'
                                             }}
-                                        />
+                                        /> */}
                                         <Divider />
                                         <PerfectScrollbar className={classes.ScrollHeight}>
-                                            <UpgradePlanCard />
-                                            <Divider />
-                                            <Card className={classes.card}>
+                                            {/* <UpgradePlanCard /> */}
+                                            {/* <Divider /> */}
+                                            {/* <Card className={classes.card}>
                                                 <CardContent>
                                                     <Grid container spacing={3} direction="column">
                                                         <Grid item>
@@ -329,7 +330,7 @@ const ProfileSection = () => {
                                                         </Grid>
                                                     </Grid>
                                                 </CardContent>
-                                            </Card>
+                                            </Card> */}
                                             <Divider />
                                             <List component="nav" className={classes.navContainer}>
                                                 <ListItemButton

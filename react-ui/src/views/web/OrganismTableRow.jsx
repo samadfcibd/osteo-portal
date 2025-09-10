@@ -111,10 +111,7 @@ const OrganismTableRow = ({ organism, onRate, onViewReviews }) => {
                         <button
                             key={index}
                             className="btn btn-sm btn-outline-primary"
-                            onClick={() => {
-                                // Handle click - you can access all item properties:
-                                // item.protein, item.compound, item.pubchem_id, item.model
-                            }}
+                            onClick={() => window.open(`/3d-viewer/${item.model}`, '_blank')}
                         >
                             <span style={{ textTransform: 'capitalize' }}>
                                 {item.protein}
@@ -126,14 +123,14 @@ const OrganismTableRow = ({ organism, onRate, onViewReviews }) => {
                         </button>
                     ))}
                 </div>
-                <div className="d-flex gap-2 mt-2">
+                {/* <div className="d-flex gap-2 mt-2">
                     <button
                         className="btn btn-sm btn-outline-secondary"
                         onClick={() => window.open(`/3d-viewer/${organism.model_file}`, '_blank')}
                     >
                         <i className="bi bi-box-arrow-up-right me-1"></i>Details
                     </button>
-                </div>
+                </div> */}
             </td>
         </tr >
     );
