@@ -9,21 +9,19 @@ const MoleculeViewer = () => {
     const viewerRef = useRef(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [currentStyle, setCurrentStyle] = useState("stick");
 
-    // Memoize the filename parsing
     const [proteinName, compoundName] = fileName
         ? fileName.split('.')[0].split('-')
         : ['', ''];
 
-    // Style options with icons
     const styleOptions = [
         { type: 'stick', label: 'Stick', icon: 'bi bi-grip-vertical' },
         { type: 'sphere', label: 'Sphere', icon: 'bi bi-circle-fill' },
         { type: 'line', label: 'Line', icon: 'bi bi-slash-lg' },
-        // { type: 'cartoon', label: 'Cartoon', icon: 'bi bi-bezier2' }
+        { type: 'cartoon', label: 'Cartoon', icon: 'bi bi-bezier2' }
     ];
 
-    // Memoized style handler
     const handleStyleChange = useCallback((style) => {
         if (!viewerRef.current) return;
 
@@ -33,18 +31,18 @@ const MoleculeViewer = () => {
             const styles = {
                 cartoon: { cartoon: { color: 'spectrum' } },
                 stick: { stick: { radius: 0.3, color: 'spectrum' } },
-                sphere: { sphere: { scale: 0.3 } },
-                line: { line: {} }
+                sphere: { sphere: { scale: 0.3, color: 'spectrum' } },
+                line: { line: { color: 'spectrum' } }
             };
 
             viewerRef.current.setStyle({}, styles[style] || styles.stick);
             viewerRef.current.render();
+            setCurrentStyle(style);
         } catch (err) {
             console.error('Style change error:', err);
         }
     }, []);
 
-    // Load molecule effect
     useEffect(() => {
         if (!fileName) {
             setError("No file name provided");
@@ -57,12 +55,33 @@ const MoleculeViewer = () => {
 
         const loadMolecule = async () => {
             try {
-                const filePath = `${window.location.origin}/mol-structure/${encodeURIComponent(fileName)}`;
-                const res = await fetch(filePath, { signal: controller.signal });
-
-                if (!res.ok) throw new Error(`Failed to load: ${res.statusText}`);
-
-                const data = await res.text();
+                // Try both possible endpoints
+                const endpoints = [
+                    `http://localhost:5000/api/pdb_files/${encodeURIComponent(fileName)}`,
+                    `http://localhost:5000/uploads/pdb-files/${encodeURIComponent(fileName)}`
+                ];
+                
+                let data, lastError;
+                
+                // Try each endpoint until one works
+                for (const endpoint of endpoints) {
+                    try {
+                        console.log("Trying endpoint:", endpoint);
+                        const res = await fetch(endpoint, { signal: controller.signal });
+                        
+                        if (res.ok) {
+                            data = await res.text();
+                            break;
+                        }
+                        lastError = `Server returned ${res.status} ${res.statusText}`;
+                    } catch (err) {
+                        lastError = err.message;
+                    }
+                }
+                
+                if (!data) {
+                    throw new Error(`Failed to load PDB file. ${lastError}`);
+                }
 
                 if (!isMounted) return;
 
@@ -73,13 +92,14 @@ const MoleculeViewer = () => {
 
                 viewerRef.current = viewer;
                 viewer.addModel(data, "pdb");
-                handleStyleChange('stick'); // Default style
+                handleStyleChange('stick');
                 viewer.zoomTo();
                 viewer.render();
 
                 setLoading(false);
             } catch (err) {
                 if (isMounted) {
+                    console.error("Error loading molecule:", err);
                     setError(err.message);
                     setLoading(false);
                 }
@@ -124,7 +144,7 @@ const MoleculeViewer = () => {
                                         {styleOptions.map((option) => (
                                             <button
                                                 key={option.type}
-                                                className="btn btn-outline-secondary"
+                                                className={`btn btn-outline-secondary ${currentStyle === option.type ? "active" : ""}`}
                                                 onClick={() => handleStyleChange(option.type)}
                                                 title={`${option.label} View`}
                                             >
@@ -154,6 +174,12 @@ const MoleculeViewer = () => {
                                             </div>
                                             <hr />
                                             <p className="small mb-2">{error}</p>
+                                            <p className="small text-muted">
+                                                Please check that:
+                                                <br />- The Flask server is running on port 5000
+                                                <br />- The file exists in the uploads directory
+                                                <br />- The server has a route to serve PDB files
+                                            </p>
                                             <button
                                                 className="btn btn-sm btn-outline-primary"
                                                 onClick={() => window.location.reload()}

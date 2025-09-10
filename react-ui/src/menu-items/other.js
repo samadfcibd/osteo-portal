@@ -31,22 +31,22 @@ export const other = {
             icon: icons['IconGrowth'],
             breadcrumbs: false
         },
-        {
-            id: 'sample-page',
-            title: 'Sample Page',
-            type: 'item',
-            url: '/sample-page',
-            icon: icons['IconBrandChrome'],
-            breadcrumbs: false
-        },
-        {
-            id: 'documentation',
-            title: 'Documentation',
-            type: 'item',
-            url: 'https://docs.appseed.us/products/react/flask-berry-dashboard',
-            icon: icons['IconHelp'],
-            external: true,
-            target: true
-        }
+        // {
+        //     id: 'sample-page',
+        //     title: 'Sample Page',
+        //     type: 'item',
+        //     url: '/sample-page',
+        //     icon: icons['IconBrandChrome'],
+        //     breadcrumbs: false
+        // },
+        // {
+        //     id: 'documentation',
+        //     title: 'Documentation',
+        //     type: 'item',
+        //     url: 'https://docs.appseed.us/products/react/flask-berry-dashboard',
+        //     icon: icons['IconHelp'],
+        //     external: true,
+        //     target: true
+        // }
     ]
 };

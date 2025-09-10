@@ -21,6 +21,8 @@ import pandas as pd
 import os
 from flask import request, current_app
 from werkzeug.utils import secure_filename
+from flask import send_from_directory, make_response
+
 
 rest_api = Api(version="1.0", title="Users API")
 
@@ -430,14 +432,12 @@ class Organisms(Resource):
             # Main query using SQLAlchemy ORM
             query = (
                 db.session.query(
-                    ResearchData,
-                    # func.group_concat(distinct(Protein.protein_name), "###").label("protein_name"),
-                    # func.group_concat(distinct(Compound.compound_name), "###").label("compound_name"),
-                    Organism.organism_name,
-                    Organism.organism_type,
-                    MolecularModels.file_path.label("model_file"),
+                    func.any_value(ResearchData.data_id).label("data_id"),
+                    func.any_value(ResearchData.organism_id).label("organism_id"),
+                    func.any_value(Organism.organism_name).label("organism_name"),
+                    func.any_value(Organism.organism_type).label("organism_type"),
                     func.coalesce(func.round(func.avg(OrganismRating.rating), 1), None).label("average_rating"),
-                    func.count(OrganismRating.id).label("review_count"),
+                    func.count(distinct(OrganismRating.id)).label("review_count"),
                     func.count(
                         case(
                             [(func.length(OrganismRating.review) > 0, 1)],
@@ -462,7 +462,7 @@ class Organisms(Resource):
                                 '@', 
                                 case(
                                     [
-                                        (MolecularModels.file_path.isnot(None), MolecularModels.file_path),
+                                        (MolecularModels.model_name.isnot(None), MolecularModels.model_name),
                                     ],
                                     else_= ''  # or use None if you prefer
                                 )
@@ -492,7 +492,8 @@ class Organisms(Resource):
             results = query.all()
             # return {
             #     'success': True,
-            #     'results': results
+            #     'results': total,
+            #     'query': str(query.statement.compile(compile_kwargs={"literal_binds": True})),
             # }
             # Count total records
             total = (
@@ -501,16 +502,36 @@ class Organisms(Resource):
                 .scalar()
             )
             
+            # SELECT research_data.data_id, research_data.organism_id, organisms.organism_name, 
+            # organisms.organism_type, coalesce(round(avg(organism_ratings.rating), 1), NULL) AS average_rating, count(organism_ratings.id) AS review_count, 
+            # count(CASE WHEN (length(organism_ratings.review) > 0) THEN 1 END) AS reviews_with_text, group_concat(DISTINCT concat(proteins.protein_name, '@', compounds.compound_name, '@', CASE WHEN 
+            # (compounds.pubchem_id IS NOT NULL) THEN compounds.pubchem_id ELSE '' END, '@', CASE WHEN (molecular_models.file_path IS NOT NULL) THEN molecular_models.file_path ELSE '' END)) AS compound_protein_model 
+
+            # FROM research_data 
+
+            # LEFT OUTER JOIN proteins ON proteins.protein_id = research_data.protein_id 
+
+            # LEFT OUTER JOIN compounds ON compounds.compound_id = research_data.compound_id 
+
+            # LEFT OUTER JOIN organisms ON organisms.organism_id = research_data.organism_id 
+
+            # LEFT OUTER JOIN organism_ratings ON organism_ratings.organism_id = organisms.organism_id 
+
+            # LEFT OUTER JOIN molecular_models ON molecular_models.protein_id = proteins.protein_id AND molecular_models.compound_id = compounds.compound_id 
+
+            # WHERE research_data.stage_id = '1' 
+
+            # GROUP BY research_data.organism_id LIMIT 10 OFFSET 0;
 
             # Format the response with proper null handling
             formatted_results = []
             for row in results:
-                research_data = row[0]
+                data_id = row[0]
                 # protein_name = row[1]
                 # compound_name = row[1]
-                organism_name = row[1]
-                organism_type = row[2]
-                model_file = row[3]
+                organism_id = row[1]
+                organism_name = row[2]
+                organism_type = row[3]
                 average_rating = row[4]
                 review_count = row[5]
                 reviews_with_text = row[6]
@@ -522,19 +543,20 @@ class Organisms(Resource):
                 # Look up the common name (case-insensitive)
                 common_name = get_english_name(organism_name)
 
-                if hasattr(research_data, "to_dict"):
-                    base_dict = research_data.to_dict()
-                else:
-                    base_dict = dict(research_data.__dict__)
-                    base_dict.pop('_sa_instance_state', None)  # Remove non-serializable attribute
+                # if hasattr(research_data, "to_dict"):
+                #     base_dict = research_data.to_dict()
+                # else:
+                #     base_dict = dict(research_data.__dict__)
+                #     base_dict.pop('_sa_instance_state', None)  # Remove non-serializable attribute
 
                 formatted_row = {
-                    **base_dict,
+                    # **base_dict,
                     # 'protein_name': protein_name,
                     # 'compound_name': compound_name,
+                    'data_id': data_id,
+                    'organism_id': organism_id,
                     'organism_name': organism_name,
                     'organism_type': organism_type,
-                    'model_file': model_file,
                     'food': common_name,
                     'compound_protein_model': cpm_objects,
                     'rating': {
@@ -1085,3 +1107,17 @@ class ImportResearchData(Resource):
                 )
             else:
                 print(f"Row {index}: Research data already exists for combination {combo_tuple}")
+
+
+
+# Absolute path is safer
+UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads", "pdb_files")
+print(UPLOAD_FOLDER)
+
+@rest_api.route("/api/pdb_files/<filename>")
+class PdbFile(Resource):
+    def get(self, filename):
+        try:
+            return send_from_directory(UPLOAD_FOLDER, filename)
+        except FileNotFoundError:
+            return {"error": "File not found"}, 404

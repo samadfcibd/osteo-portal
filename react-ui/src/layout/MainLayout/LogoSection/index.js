@@ -13,7 +13,8 @@ import Logo from './../../../ui-component/Logo';
 const LogoSection = () => {
     return (
         <ButtonBase disableRipple component={Link} to={config.defaultPath}>
-            <Logo />
+            {/* <Logo /> */}
+            <b>Natural Resources For Osteoarthritis</b>
         </ButtonBase>
     );
 };

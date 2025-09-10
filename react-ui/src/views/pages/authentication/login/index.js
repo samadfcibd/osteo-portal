@@ -30,7 +30,8 @@ const Login = () => {
                                 <Grid container spacing={2} alignItems="center" justifyContent="center">
                                     <Grid item sx={{ mb: 3 }}>
                                         <RouterLink to="#">
-                                            <Logo />
+                                            {/* <Logo /> */}
+                                            Natural Resources For Osteoarthritis
                                         </RouterLink>
                                     </Grid>
                                     <Grid item xs={12}>

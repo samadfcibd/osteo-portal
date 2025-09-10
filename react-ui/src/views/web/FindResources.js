@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import WorldMap from './WorldMap'
-import ResourcesModal from './ResourcesModal'
 import ResourcesModal_FINAL from './ResourcesModal_FINAL';
 import * as am5geodata_data_countries2 from "@amcharts/amcharts5-geodata/data/countries2";
 import SelectSearch from 'react-select';
