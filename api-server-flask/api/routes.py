@@ -12,7 +12,7 @@ from flask_restx import Api, Resource, fields, Namespace
 
 import jwt
 
-from .models import *
+from .model import *
 from .config import BaseConfig
 import requests
 from sqlalchemy import func, distinct, case, text
