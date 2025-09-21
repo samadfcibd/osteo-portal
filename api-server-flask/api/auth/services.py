@@ -5,16 +5,16 @@ from api.models.user import Users, JWTTokenBlocklist
 from api.db import db
 
 class AuthService:
-    # @staticmethod
-    # def create_user(username, email, password):
-    #     """Create a new user"""
-    #     if Users.get_by_email(email):
-    #         raise ValueError("Email already taken")
+    @staticmethod
+    def create_user(username, email, password):
+        """Create a new user"""
+        if Users.get_by_email(email):
+            raise ValueError("Email already taken")
         
-    #     user = Users(username=username, email=email)
-    #     user.set_password(password)
-    #     user.save()
-    #     return user
+        user = Users(username=username, email=email)
+        user.set_password(password)
+        user.save()
+        return user
     
     @staticmethod
     def authenticate_user(email, password):
@@ -33,13 +33,13 @@ class AuthService:
         
         return token, user
     
-    # @staticmethod
-    # def revoke_token(token):
-    #     """Add token to blocklist"""
-    #     jwt_block = JWTTokenBlocklist(jwt_token=token)
-    #     jwt_block.save()
+    @staticmethod
+    def revoke_token(token):
+        """Add token to blocklist"""
+        jwt_block = JWTTokenBlocklist(jwt_token=token)
+        jwt_block.save()
     
-    # @staticmethod
-    # def is_token_revoked(token):
-    #     """Check if token is in blocklist"""
-    #     return db.session.query(JWTTokenBlocklist.id).filter_by(jwt_token=token).scalar() is not None
+    @staticmethod
+    def is_token_revoked(token):
+        """Check if token is in blocklist"""
+        return db.session.query(JWTTokenBlocklist.id).filter_by(jwt_token=token).scalar() is not None

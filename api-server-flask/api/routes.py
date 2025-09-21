@@ -129,70 +129,70 @@ def token_required(f):
 """
 
 
-@rest_api.route('/api/users/register')
-class Register(Resource):
-    """
-       Creates a new user by taking 'signup_model' input
-    """
+# @rest_api.route('/api/users/register')
+# class Register(Resource):
+#     """
+#        Creates a new user by taking 'signup_model' input
+#     """
 
-    @rest_api.expect(signup_model, validate=True)
-    def post(self):
-        print('asdfsd')
+#     @rest_api.expect(signup_model, validate=True)
+#     def post(self):
+#         print('asdfsd')
 
-        req_data = request.get_json()
+#         req_data = request.get_json()
 
-        _username = req_data.get("username")
-        _email = req_data.get("email")
-        _password = req_data.get("password")
+#         _username = req_data.get("username")
+#         _email = req_data.get("email")
+#         _password = req_data.get("password")
 
-        user_exists = Users.get_by_email(_email)
-        if user_exists:
-            return {"success": False,
-                    "msg": "Email already taken"}, 400
+#         user_exists = Users.get_by_email(_email)
+#         if user_exists:
+#             return {"success": False,
+#                     "msg": "Email already taken"}, 400
 
-        new_user = Users(username=_username, email=_email)
+#         new_user = Users(username=_username, email=_email)
 
-        new_user.set_password(_password)
-        new_user.save()
+#         new_user.set_password(_password)
+#         new_user.save()
 
-        return {"success": True,
-                "userID": new_user.id,
-                "msg": "The user was successfully registered"}, 200
+#         return {"success": True,
+#                 "userID": new_user.id,
+#                 "msg": "The user was successfully registered"}, 200
 
 
-@rest_api.route('/api/users/login')
-class Login(Resource):
-    """
-       Login user by taking 'login_model' input and return JWT token
-    """
+# @rest_api.route('/api/users/login')
+# class Login(Resource):
+#     """
+#        Login user by taking 'login_model' input and return JWT token
+#     """
 
-    @rest_api.expect(login_model, validate=True)
-    def post(self):
+#     @rest_api.expect(login_model, validate=True)
+#     def post(self):
 
-        req_data = request.get_json()
+#         req_data = request.get_json()
 
-        _email = req_data.get("email")
-        _password = req_data.get("password")
+#         _email = req_data.get("email")
+#         _password = req_data.get("password")
 
-        user_exists = Users.get_by_email(_email)
+#         user_exists = Users.get_by_email(_email)
 
-        if not user_exists:
-            return {"success": False,
-                    "msg": "This email does not exist."}, 400
+#         if not user_exists:
+#             return {"success": False,
+#                     "msg": "This email does not exist."}, 400
 
-        if not user_exists.check_password(_password):
-            return {"success": False,
-                    "msg": "Wrong credentials."}, 400
+#         if not user_exists.check_password(_password):
+#             return {"success": False,
+#                     "msg": "Wrong credentials."}, 400
 
-        # create access token uwing JWT
-        token = jwt.encode({'email': _email, 'exp': datetime.utcnow() + timedelta(minutes=30)}, BaseConfig.SECRET_KEY)
+#         # create access token uwing JWT
+#         token = jwt.encode({'email': _email, 'exp': datetime.utcnow() + timedelta(minutes=30)}, BaseConfig.SECRET_KEY)
 
-        user_exists.set_jwt_auth_active(True)
-        user_exists.save()
+#         user_exists.set_jwt_auth_active(True)
+#         user_exists.save()
 
-        return {"success": True,
-                "token": token,
-                "user": user_exists.toJSON()}, 200
+#         return {"success": True,
+#                 "token": token,
+#                 "user": user_exists.toJSON()}, 200
 
 
 @rest_api.route('/api/users/edit')
@@ -221,37 +221,37 @@ class EditUser(Resource):
         return {"success": True}, 200
 
 
-@rest_api.route('/api/users/logout')
-class LogoutUser(Resource):
-    """
-       Logs out User using 'logout_model' input
-    """
+# @rest_api.route('/api/users/logout')
+# class LogoutUser(Resource):
+#     """
+#        Logs out User using 'logout_model' input
+#     """
 
-    @token_required
-    def post(self, current_user):
+#     @token_required
+#     def post(self, current_user):
 
-        token = request.headers.get("authorization")
-        if not token:
-            return {"success": False, "msg": "Token missing"}, 400
+#         token = request.headers.get("authorization")
+#         if not token:
+#             return {"success": False, "msg": "Token missing"}, 400
 
-        try:
-            # Attempt to decode (but don't fail if expired)
-            try:
-                jwt.decode(token, BaseConfig.SECRET_KEY, algorithms=["HS256"])
-            except jwt.ExpiredSignatureError:
-                pass  # Still allow revoking expired tokens
+#         try:
+#             # Attempt to decode (but don't fail if expired)
+#             try:
+#                 jwt.decode(token, BaseConfig.SECRET_KEY, algorithms=["HS256"])
+#             except jwt.ExpiredSignatureError:
+#                 pass  # Still allow revoking expired tokens
 
-            # Add token to blocklist
-            jwt_block = JWTTokenBlocklist(
-                jwt_token=token,
-                created_at=datetime.now(timezone.utc)
-            )
-            db.session.add(jwt_block)
-            db.session.commit()
+#             # Add token to blocklist
+#             jwt_block = JWTTokenBlocklist(
+#                 jwt_token=token,
+#                 created_at=datetime.now(timezone.utc)
+#             )
+#             db.session.add(jwt_block)
+#             db.session.commit()
 
-            return {"success": True}, 200
-        except Exception as e:
-            return {"success": False, "msg": str(e)}, 400
+#             return {"success": True}, 200
+#         except Exception as e:
+#             return {"success": False, "msg": str(e)}, 400
     
 # @rest_api.route('/api/users/logout')
 # class LogoutUser(Resource):
