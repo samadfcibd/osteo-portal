@@ -110,8 +110,9 @@ const OrganismTableRow = ({ organism, onRate, onViewReviews }) => {
                     {organism.compound_protein_model.map((item, index) => (
                         <button
                             key={index}
-                            className="btn btn-sm btn-outline-primary"
+                            className="btn btn-sm btn-outline-dark"
                             onClick={() => window.open(`/3d-viewer/${item.model}`, '_blank')}
+                            title='Protien-Compound Interaction 3D Model'
                         >
                             <span style={{ textTransform: 'capitalize' }}>
                                 {item.protein}

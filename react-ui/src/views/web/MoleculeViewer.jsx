@@ -11,9 +11,7 @@ const MoleculeViewer = () => {
     const [error, setError] = useState(null);
     const [currentStyle, setCurrentStyle] = useState("stick");
 
-    const [proteinName, compoundName] = fileName
-        ? fileName.split('.')[0].split('-')
-        : ['', ''];
+    const { proteinName, compoundName } = parseFileName(fileName);
 
     const styleOptions = [
         { type: 'stick', label: 'Stick', icon: 'bi bi-grip-vertical' },
@@ -21,6 +19,23 @@ const MoleculeViewer = () => {
         { type: 'line', label: 'Line', icon: 'bi bi-slash-lg' },
         { type: 'cartoon', label: 'Cartoon', icon: 'bi bi-bezier2' }
     ];
+
+    function parseFileName(fileName) {
+        if (!fileName) return { proteinName: '', compoundName: '' };
+
+        const baseName = fileName.split('.')[0];
+        const firstUnderscoreIndex = baseName.indexOf('_');
+
+        if (firstUnderscoreIndex === -1) {
+            // No underscore found, assume the whole name is the protein?
+            return { proteinName: baseName, compoundName: '' };
+        }
+
+        const proteinName = baseName.substring(0, firstUnderscoreIndex);
+        const compoundName = baseName.substring(firstUnderscoreIndex + 1);
+
+        return { proteinName, compoundName };
+    }
 
     const handleStyleChange = useCallback((style) => {
         if (!viewerRef.current) return;
@@ -60,15 +75,15 @@ const MoleculeViewer = () => {
                     `http://localhost:5000/api/pdb_files/${encodeURIComponent(fileName)}`,
                     `http://localhost:5000/uploads/pdb-files/${encodeURIComponent(fileName)}`
                 ];
-                
+
                 let data, lastError;
-                
+
                 // Try each endpoint until one works
                 for (const endpoint of endpoints) {
                     try {
                         console.log("Trying endpoint:", endpoint);
                         const res = await fetch(endpoint, { signal: controller.signal });
-                        
+
                         if (res.ok) {
                             data = await res.text();
                             break;
@@ -78,7 +93,7 @@ const MoleculeViewer = () => {
                         lastError = err.message;
                     }
                 }
-                
+
                 if (!data) {
                     throw new Error(`Failed to load PDB file. ${lastError}`);
                 }
