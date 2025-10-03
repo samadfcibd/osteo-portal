@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
+import * as $3Dmol from "3dmol/build/3Dmol-min.js";
 import FrontLayout from './FrontLayout';
 
 const MoleculeViewer = () => {
@@ -8,15 +9,15 @@ const MoleculeViewer = () => {
     const viewerRef = useRef(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [currentStyle, setCurrentStyle] = useState("cartoon");
+    const [currentStyle, setCurrentStyle] = useState("stick");
 
     const { proteinName, compoundName } = parseFileName(fileName);
 
     const styleOptions = [
-        { type: 'cartoon', label: 'Cartoon', icon: 'bi bi-bezier2' },
-        { type: 'ball-and-stick', label: 'Ball & Stick', icon: 'bi bi-grip-vertical' },
-        { type: 'spacefill', label: 'Spacefill', icon: 'bi bi-circle-fill' },
-        { type: 'surface', label: 'Surface', icon: 'bi bi-bounding-box' }
+        { type: 'stick', label: 'Stick', icon: 'bi bi-grip-vertical' },
+        { type: 'sphere', label: 'Sphere', icon: 'bi bi-circle-fill' },
+        { type: 'line', label: 'Line', icon: 'bi bi-slash-lg' },
+        { type: 'cartoon', label: 'Cartoon', icon: 'bi bi-bezier2' }
     ];
 
     function parseFileName(fileName) {
@@ -26,6 +27,7 @@ const MoleculeViewer = () => {
         const firstUnderscoreIndex = baseName.indexOf('_');
 
         if (firstUnderscoreIndex === -1) {
+            // No underscore found, assume the whole name is the protein?
             return { proteinName: baseName, compoundName: '' };
         }
 
@@ -35,72 +37,26 @@ const MoleculeViewer = () => {
         return { proteinName, compoundName };
     }
 
-    const loadMolstarScript = () => {
-        return new Promise((resolve, reject) => {
-            // Check if already loaded
-            if (window.molstar) {
-                resolve();
-                return;
-            }
-
-            // Load CSS
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = 'https://cdn.jsdelivr.net/npm/molstar@latest/build/viewer/molstar.css';
-            document.head.appendChild(link);
-
-            // Load JS
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/molstar@latest/build/viewer/molstar.js';
-            script.onload = () => resolve();
-            script.onerror = () => reject(new Error('Failed to load Molstar'));
-            document.head.appendChild(script);
-        });
-    };
-
-    const applyRepresentation = async (viewer, style) => {
-        if (!viewer || !viewer.plugin) return;
+    const handleStyleChange = useCallback((style) => {
+        if (!viewerRef.current) return;
 
         try {
-            const structures = viewer.plugin.managers.structure.hierarchy.current.structures;
-            if (!structures || structures.length === 0) {
-                console.warn('No structures available yet');
-                return;
-            }
+            viewerRef.current.setStyle({}, {});
 
-            const struct = structures[0];
-            if (!struct || !struct.cell) {
-                console.warn('Structure not properly initialized');
-                return;
-            }
-
-            // Clear all existing representations
-            await viewer.plugin.managers.structure.component.clear(struct.cell);
-
-            // Apply new representation based on style
-            const params = {
-                cartoon: { type: 'cartoon', color: 'chain-id' },
-                'ball-and-stick': { type: 'ball-and-stick', color: 'element-symbol' },
-                'spacefill': { type: 'spacefill', color: 'element-symbol' },
-                'surface': { type: 'molecular-surface', color: 'chain-id' }
+            const styles = {
+                cartoon: { cartoon: { color: 'spectrum' } },
+                stick: { stick: { radius: 0.3, color: 'spectrum' } },
+                sphere: { sphere: { scale: 0.3, color: 'spectrum' } },
+                line: { line: { color: 'spectrum' } }
             };
 
-            const representationParams = params[style] || params.cartoon;
-            
-            await viewer.plugin.builders.structure.representation.addRepresentation(
-                struct.cell, 
-                representationParams
-            );
-
+            viewerRef.current.setStyle({}, styles[style] || styles.stick);
+            viewerRef.current.render();
             setCurrentStyle(style);
         } catch (err) {
             console.error('Style change error:', err);
         }
-    };
-
-    const handleStyleChange = (style) => {
-        applyRepresentation(viewerRef.current, style);
-    };
+    }, []);
 
     useEffect(() => {
         if (!fileName) {
@@ -112,28 +68,8 @@ const MoleculeViewer = () => {
         let isMounted = true;
         const controller = new AbortController();
 
-        const initMolstar = async () => {
+        const loadMolecule = async () => {
             try {
-                // Load Molstar library
-                await loadMolstarScript();
-
-                if (!isMounted) return;
-
-                // Create viewer
-                const viewer = await window.molstar.Viewer.create(containerRef.current, {
-                    layoutIsExpanded: false,
-                    layoutShowControls: false,
-                    layoutShowRemoteState: false,
-                    layoutShowSequence: false,
-                    layoutShowLog: false,
-                    layoutShowLeftPanel: false,
-                    viewportShowExpand: true,
-                    viewportShowSelectionMode: false,
-                    viewportShowAnimation: false,
-                });
-
-                viewerRef.current = viewer;
-
                 // Try both possible endpoints
                 const endpoints = [
                     `http://localhost:5000/api/pdb_files/${encodeURIComponent(fileName)}`,
@@ -142,6 +78,7 @@ const MoleculeViewer = () => {
 
                 let data, lastError;
 
+                // Try each endpoint until one works
                 for (const endpoint of endpoints) {
                     try {
                         console.log("Trying endpoint:", endpoint);
@@ -163,13 +100,16 @@ const MoleculeViewer = () => {
 
                 if (!isMounted) return;
 
-                // Load structure from PDB data
-                await viewer.loadStructureFromData(data, 'pdb', { representationParams: {} });
+                containerRef.current.innerHTML = "";
+                const viewer = $3Dmol.createViewer(containerRef.current, {
+                    backgroundColor: "white"
+                });
 
-                // Apply initial representation
-                setTimeout(() => {
-                    applyRepresentation(viewer, 'cartoon');
-                }, 100);
+                viewerRef.current = viewer;
+                viewer.addModel(data, "pdb");
+                handleStyleChange('stick');
+                viewer.zoomTo();
+                viewer.render();
 
                 setLoading(false);
             } catch (err) {
@@ -181,21 +121,16 @@ const MoleculeViewer = () => {
             }
         };
 
-        initMolstar();
+        loadMolecule();
 
         return () => {
             isMounted = false;
             controller.abort();
             if (viewerRef.current) {
-                try {
-                    viewerRef.current.plugin.dispose();
-                } catch (e) {
-                    console.error('Error disposing viewer:', e);
-                }
-                viewerRef.current = null;
+                viewerRef.current.clear();
             }
         };
-    }, [fileName]);
+    }, [fileName, handleStyleChange]);
 
     return (
         <FrontLayout>
@@ -237,7 +172,7 @@ const MoleculeViewer = () => {
 
                             <div className="card-body p-0 position-relative" style={{ height: '600px' }}>
                                 {loading && (
-                                    <div className="position-absolute top-50 start-50 translate-middle text-center" style={{ zIndex: 1000 }}>
+                                    <div className="position-absolute top-50 start-50 translate-middle text-center">
                                         <div className="spinner-grow text-primary" role="status">
                                             <span className="visually-hidden">Loading...</span>
                                         </div>
@@ -246,7 +181,7 @@ const MoleculeViewer = () => {
                                 )}
 
                                 {error && (
-                                    <div className="position-absolute top-50 start-50 translate-middle text-center w-75" style={{ zIndex: 1000 }}>
+                                    <div className="position-absolute top-50 start-50 translate-middle text-center w-75">
                                         <div className="alert alert-danger border-0 shadow-sm">
                                             <div className="d-flex align-items-center">
                                                 <i className="bi bi-exclamation-triangle-fill me-2"></i>
@@ -276,8 +211,7 @@ const MoleculeViewer = () => {
                                     style={{
                                         backgroundColor: '#fff',
                                         borderRadius: '0 0 0.375rem 0.375rem',
-                                        minHeight: '550px',
-                                        position: 'relative'
+                                        minHeight: '400px'
                                     }}
                                 />
                             </div>
