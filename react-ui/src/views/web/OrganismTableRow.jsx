@@ -62,7 +62,7 @@ const OrganismTableRow = ({ organism, onRate, onViewReviews }) => {
                     )}
                 </div>
             </td>
-            <td>
+            {/* <td>
                 <small className="d-block mb-1">
                     Organism Type: <i style={{ textTransform: 'capitalize' }}>{organism.gbifKingdom}</i>
                 </small>
@@ -124,14 +124,67 @@ const OrganismTableRow = ({ organism, onRate, onViewReviews }) => {
                         </button>
                     ))}
                 </div>
-                {/* <div className="d-flex gap-2 mt-2">
-                    <button
-                        className="btn btn-sm btn-outline-secondary"
-                        onClick={() => window.open(`/3d-viewer/${organism.model_file}`, '_blank')}
-                    >
-                        <i className="bi bi-box-arrow-up-right me-1"></i>Details
-                    </button>
-                </div> */}
+            </td> */}
+
+            <td>
+                <small className="d-block mb-1">
+                    Organism Type: <i style={{ textTransform: 'capitalize' }}>{organism.gbifKingdom}</i>
+                </small>
+
+                {/* Group by protein and display each protein-compound pair separately */}
+                {Object.entries(
+                    organism.compound_protein_model.reduce((acc, item) => {
+                        if (!acc[item.protein]) {
+                            acc[item.protein] = [];
+                        }
+                        acc[item.protein].push(item);
+                        return acc;
+                    }, {})
+                ).map(([protein, items]) => (
+                    <div key={protein} className="p-2 border-top mb-2 bg-light bg-gradient border-secondary">
+                        <small className="d-block mb-1">
+                            Protein: <i style={{ textTransform: 'capitalize' }}>{protein}</i>
+                        </small>
+                        <small className="d-block mb-1">
+                            Compound:{" "}
+                            {items.map((item, index, array) => {
+                                const pubchemId = item?.pubchem_id;
+                                return (
+                                    <React.Fragment key={`${protein}-${item.compound}-${index}`}>
+                                        {pubchemId && pubchemId !== "NULL" ? (
+                                            <a
+                                                href={`https://pubchem.ncbi.nlm.nih.gov/compound/${pubchemId}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                title='Explore compound details on PubChem'
+                                                style={{ textTransform: 'capitalize', textDecoration: 'none' }}
+                                            >
+                                                {item.compound}
+                                            </a>
+                                        ) : (
+                                            <i style={{ textTransform: 'capitalize' }}>
+                                                {item.compound}
+                                            </i>
+                                        )}
+                                        {index < array.length - 1 && ", "}
+                                    </React.Fragment>
+                                );
+                            })}
+                        </small>
+                        <div className="d-flex gap-2 flex-wrap">
+                            {items.map((item, index) => (
+                                <button
+                                    key={index}
+                                    className="btn btn-sm btn-outline-dark"
+                                    onClick={() => window.open(`/3d-viewer/${item.model}`, '_blank')}
+                                    title={`${item.protein} - ${item.compound} interaction 3D model`}
+                                >
+                                    Protein-Compound Interaction
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                ))}
             </td>
         </tr >
     );
