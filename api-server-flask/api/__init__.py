@@ -64,7 +64,7 @@ def configure_cors(app):
 def register_api_routes(app):
     '''Register all API routes and namespaces'''
     from .auth.routes import auth_ns
-    # from .organisms.routes import organisms_ns
+    from .organisms.routes import organisms_ns
     # from .uploads.routes import uploads_ns
     # from .imports.routes import imports_ns
     
@@ -79,7 +79,7 @@ def register_api_routes(app):
     
     # Register namespaces
     api.add_namespace(auth_ns, path='/api/users')
-    # api.add_namespace(organisms_ns, path='/api/organisms')
+    api.add_namespace(organisms_ns, path='/api/organisms')
     # api.add_namespace(uploads_ns, path='/api/uploads') 
     # api.add_namespace(imports_ns, path='/api/imports')
 

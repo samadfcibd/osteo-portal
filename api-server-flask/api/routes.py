@@ -320,32 +320,32 @@ class GitHubLogin(Resource):
                 }}, 200
     
 
-@rest_api.route('/api/clinical-stages')
-class ClinicalStages(Resource):
-    def get(self):
-        try:
-            results = ClinicalStage.query.all()
+# @rest_api.route('/api/clinical-stages')
+# class ClinicalStages(Resource):
+#     def get(self):
+#         try:
+#             results = ClinicalStage.query.all()
             
-            # Convert results to a list of dictionaries
-            results = [{'stage_id': stage.stage_id, 'stage_name': stage.stage_name} for stage in results] 
+#             # Convert results to a list of dictionaries
+#             results = [{'stage_id': stage.stage_id, 'stage_name': stage.stage_name} for stage in results] 
 
-            # Add the "Select stage" option at the beginning
-            select_option = {
-                'stage_id': '',
-                'stage_name': 'Select stage'
-            }
-            results.insert(0, select_option)
+#             # Add the "Select stage" option at the beginning
+#             select_option = {
+#                 'stage_id': '',
+#                 'stage_name': 'Select stage'
+#             }
+#             results.insert(0, select_option)
             
-            # Return JSON response
-            return {
-                'success': True,
-                'data': results
-            }
-        except Exception as e:
-            return {
-                'success': False,
-                'message': str(e)
-            }
+#             # Return JSON response
+#             return {
+#                 'success': True,
+#                 'data': results
+#             }
+#         except Exception as e:
+#             return {
+#                 'success': False,
+#                 'message': str(e)
+#             }
         
 @rest_api.route('/api/proteins')
 class Proteins(Resource):
@@ -601,173 +601,173 @@ class Organisms(Resource):
                 'raw_query': str(query.statement.compile(compile_kwargs={"literal_binds": True})) if 'query' in locals() else None
             }, 500
 
-def parse_compound_protein_model(cpm_string):
-    if not cpm_string:
-        return []
+# def parse_compound_protein_model(cpm_string):
+#     if not cpm_string:
+#         return []
     
-    result = []
-    for item in cpm_string.split(','):
-        parts = item.split('@')
-        if len(parts) >= 3:  # Ensure we have all three parts
-            obj = {
-                'protein': parts[0].strip(),
-                'compound': parts[1].strip(),
-                'pubchem_id': parts[2].strip(),
-                'model': parts[3].strip()
-            }
-            result.append(obj)
-    return result
+#     result = []
+#     for item in cpm_string.split(','):
+#         parts = item.split('@')
+#         if len(parts) >= 3:  # Ensure we have all three parts
+#             obj = {
+#                 'protein': parts[0].strip(),
+#                 'compound': parts[1].strip(),
+#                 'pubchem_id': parts[2].strip(),
+#                 'model': parts[3].strip()
+#             }
+#             result.append(obj)
+#     return result
 
 
-def get_english_name(scientific_name,  language="English"):
-    base_url = "https://sciname.info/Default.asp"
-    params = {"SciName": scientific_name}
+# def get_english_name(scientific_name,  language="English"):
+#     base_url = "https://sciname.info/Default.asp"
+#     params = {"SciName": scientific_name}
 
-    response = requests.get(base_url, params=params)
-    soup = BeautifulSoup(response.content, "html.parser")
+#     response = requests.get(base_url, params=params)
+#     soup = BeautifulSoup(response.content, "html.parser")
 
-    tables = soup.find_all("table")
-    results = []
+#     tables = soup.find_all("table")
+#     results = []
 
-    for table in tables:
-        rows = table.find_all("tr")
-        for row in rows:
-            cells = row.find_all("td")
-            if len(cells) >= 2:
-                key = cells[0].get_text(strip=True)
-                val = cells[1].get_text(strip=True)
-                if key.startswith(f"{language}:"):
-                    results.append(val)
+#     for table in tables:
+#         rows = table.find_all("tr")
+#         for row in rows:
+#             cells = row.find_all("td")
+#             if len(cells) >= 2:
+#                 key = cells[0].get_text(strip=True)
+#                 val = cells[1].get_text(strip=True)
+#                 if key.startswith(f"{language}:"):
+#                     results.append(val)
 
-    return results
+#     return results
 
 
 # @bp.route("/api/organisms/<int:organism_id>/reviews")
-@rest_api.route('/api/organisms/<organism_id>/reviews', endpoint='OrganismReviews')
-@rest_api.doc(params={'organism_id': 'Organism ID to fetch reviews'})
+# @rest_api.route('/api/organisms/<organism_id>/reviews', endpoint='OrganismReviews')
+# @rest_api.doc(params={'organism_id': 'Organism ID to fetch reviews'})
 
-class OrganismReviews(Resource):
-    def get(self, organism_id):
-        try:
-            # Fetch reviews using SQLAlchemy ORM
-            reviews = (
-                db.session.query(OrganismRating)
-                .filter(OrganismRating.organism_id == organism_id)
-                .order_by(OrganismRating.created_at.desc())
-                .all()
-            )
+# class OrganismReviews(Resource):
+#     def get(self, organism_id):
+#         try:
+#             # Fetch reviews using SQLAlchemy ORM
+#             reviews = (
+#                 db.session.query(OrganismRating)
+#                 .filter(OrganismRating.organism_id == organism_id)
+#                 .order_by(OrganismRating.created_at.desc())
+#                 .all()
+#             )
 
-            # Serialize reviews
-            reviews_list = []
-            for review in reviews:
-                reviews_list.append({
-                    'id': review.id,
-                    'organism_id': review.organism_id,
-                    'rating': review.rating,
-                    'review': review.review,
-                    'reviewer_name': review.reviewer_name if review.reviewer_name else 'Anonymous',
-                    'reviewer_email': review.reviewer_email if review.reviewer_email else 'Anonymous',
-                    'created_at': review.created_at.isoformat() if review.created_at else None,
-                    'updated_at': review.updated_at.isoformat() if review.updated_at else None,
-                })
+#             # Serialize reviews
+#             reviews_list = []
+#             for review in reviews:
+#                 reviews_list.append({
+#                     'id': review.id,
+#                     'organism_id': review.organism_id,
+#                     'rating': review.rating,
+#                     'review': review.review,
+#                     'reviewer_name': review.reviewer_name if review.reviewer_name else 'Anonymous',
+#                     'reviewer_email': review.reviewer_email if review.reviewer_email else 'Anonymous',
+#                     'created_at': review.created_at.isoformat() if review.created_at else None,
+#                     'updated_at': review.updated_at.isoformat() if review.updated_at else None,
+#                 })
 
-            # Calculate stats
-            stats = (
-                db.session.query(
-                    func.avg(OrganismRating.rating).label('average_rating'),
-                    func.count(OrganismRating.id).label('review_count')
-                )
-                .filter(OrganismRating.organism_id == organism_id)
-                .first()
-            )
+#             # Calculate stats
+#             stats = (
+#                 db.session.query(
+#                     func.avg(OrganismRating.rating).label('average_rating'),
+#                     func.count(OrganismRating.id).label('review_count')
+#                 )
+#                 .filter(OrganismRating.organism_id == organism_id)
+#                 .first()
+#             )
 
-            average_rating = float(stats.average_rating) if stats.average_rating else 0
-            review_count = stats.review_count if stats.review_count else 0
+#             average_rating = float(stats.average_rating) if stats.average_rating else 0
+#             review_count = stats.review_count if stats.review_count else 0
 
-            return {
-                'success': True,
-                'data': {
-                    'reviews': reviews_list,
-                    'average_rating': average_rating,
-                    'review_count': review_count
-                }
-            }
-        except Exception as e:
-            return {
-                'success': False,
-                'message': str(e),
-                'data': {
-                    'reviews': [],
-                    'average_rating': 0,
-                    'review_count': 0
-                }
-            }, 500
+#             return {
+#                 'success': True,
+#                 'data': {
+#                     'reviews': reviews_list,
+#                     'average_rating': average_rating,
+#                     'review_count': review_count
+#                 }
+#             }
+#         except Exception as e:
+#             return {
+#                 'success': False,
+#                 'message': str(e),
+#                 'data': {
+#                     'reviews': [],
+#                     'average_rating': 0,
+#                     'review_count': 0
+#                 }
+#             }, 500
 
 # Register the resource with the endpoint
 # rest_api.add_resource(OrganismReviews, '/api/organisms/<organism_id>/reviews')
 
 
-@rest_api.route('/api/organisms/<int:organism_id>/rating')
-class AddOrganismRating(Resource):
-    """
-    Add a new rating for an organism (anonymous rating)
-    """
+# @rest_api.route('/api/organisms/<int:organism_id>/rating')
+# class AddOrganismRating(Resource):
+#     """
+#     Add a new rating for an organism (anonymous rating)
+#     """
 
-    @rest_api.doc(params={'organism_id': 'Organism ID to add rating'})
-    @rest_api.expect({
-        'rating': fields.Integer(required=True, description='Rating value (1-5)'),
-        'review': fields.String(required=False, description='Optional review text'),
-        'user_name': fields.String(required=False, default='Anonymous', description='Reviewer name'),
-        'user_email': fields.String(required=False, default='Anonymous', description='Reviewer email')
-    })
+#     @rest_api.doc(params={'organism_id': 'Organism ID to add rating'})
+#     @rest_api.expect({
+#         'rating': fields.Integer(required=True, description='Rating value (1-5)'),
+#         'review': fields.String(required=False, description='Optional review text'),
+#         'user_name': fields.String(required=False, default='Anonymous', description='Reviewer name'),
+#         'user_email': fields.String(required=False, default='Anonymous', description='Reviewer email')
+#     })
 
 
-    def post(self, organism_id):
-        try:
-            data = request.get_json()
+#     def post(self, organism_id):
+#         try:
+#             data = request.get_json()
 
-            # Validate required fields
-            if not data or 'rating' not in data:
-                return {
-                    'success': False,
-                    'message': 'Rating is required'
-                }, 400
+#             # Validate required fields
+#             if not data or 'rating' not in data:
+#                 return {
+#                     'success': False,
+#                     'message': 'Rating is required'
+#                 }, 400
 
-            rating = data.get('rating')
-            review = data.get('review', '')
-            reviewer_name = data.get('user_name', 'Anonymous')
-            reviewer_email = data.get('user_email', 'Anonymous')
+#             rating = data.get('rating')
+#             review = data.get('review', '')
+#             reviewer_name = data.get('user_name', 'Anonymous')
+#             reviewer_email = data.get('user_email', 'Anonymous')
 
-            # Validate rating value
-            if not isinstance(rating, int) or rating < 1 or rating > 5:
-                return {
-                    'success': False,
-                    'message': 'Rating must be an integer between 1 and 5'
-                }, 400
+#             # Validate rating value
+#             if not isinstance(rating, int) or rating < 1 or rating > 5:
+#                 return {
+#                     'success': False,
+#                     'message': 'Rating must be an integer between 1 and 5'
+#                 }, 400
 
-            # Insert new rating using SQLAlchemy
-            new_rating = OrganismRating(
-                organism_id=organism_id,
-                rating=rating,
-                review=review,
-                reviewer_name=reviewer_name,
-                reviewer_email=reviewer_email,
-                created_at=datetime.now(timezone.utc)
-            )
-            db.session.add(new_rating)
-            db.session.commit()
+#             # Insert new rating using SQLAlchemy
+#             new_rating = OrganismRating(
+#                 organism_id=organism_id,
+#                 rating=rating,
+#                 review=review,
+#                 reviewer_name=reviewer_name,
+#                 reviewer_email=reviewer_email,
+#                 created_at=datetime.now(timezone.utc)
+#             )
+#             db.session.add(new_rating)
+#             db.session.commit()
 
-            return {
-                'success': True,
-                'message': 'Rating added successfully',
-                'rating_id': new_rating.id
-            }
-        except Exception as e:
-            db.session.rollback()
-            return {
-                'success': False,
-                'message': str(e)
-            }, 500
+#             return {
+#                 'success': True,
+#                 'message': 'Rating added successfully',
+#                 'rating_id': new_rating.id
+#             }
+#         except Exception as e:
+#             db.session.rollback()
+#             return {
+#                 'success': False,
+#                 'message': str(e)
+#             }, 500
 
 
 

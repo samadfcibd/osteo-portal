@@ -65,7 +65,7 @@ const FindResources = () => {
 
         const fetchClinicalStages = async () => {
             try {
-                const response = await axios.get(process.env.REACT_APP_BACKEND_SERVER + 'clinical-stages');
+                const response = await axios.get(process.env.REACT_APP_BACKEND_SERVER + 'organisms/clinical-stages');
                 if (response.data.success) {
                     setStage(response.data.data);
                 } else {
