@@ -2,7 +2,7 @@
 
 import os
 import json
-from flask import Flask, request
+from flask import Flask, request, redirect
 from flask_cors import CORS
 from flask_restx import Api
 
@@ -36,9 +36,12 @@ def create_app(config_name=None):
     
     # Configure CORS
     configure_cors(app)
+
+    # Register root route to redirect to docs
+    register_root_route(app)
     
-    # Register API routes
-    register_api_routes(app)
+    # Register API routes (this will create the API instance)
+    api = register_api_routes(app)    
     
     # Register error handlers
     register_error_handlers(app)
@@ -60,28 +63,56 @@ def configure_cors(app):
         }
     })
 
+def register_root_route(app):
+    '''Register root route to redirect to API documentation'''
+    
+    @app.route('/')
+    def root_redirect():  # CHANGED: Different function name to avoid conflicts
+        '''Redirect root to API documentation'''
+        return redirect('/docs/')
+
 
 def register_api_routes(app):
     '''Register all API routes and namespaces'''
-    from .auth.routes import auth_ns
-    from .organisms.routes import organisms_ns
-    # from .uploads.routes import uploads_ns
-    # from .imports.routes import imports_ns
     
-    # Create API instance
+    # Create API instance FIRST
+    authorizations = {
+        'Bearer Auth': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization',
+            'description': 'Enter: Bearer &lt;your_token&gt;'
+        }
+    }
+    
     api = Api(
         app,
         version="1.0", 
-        title="Research API",
-        description="A comprehensive research data API",
-        doc='/api/docs/'  # Swagger documentation endpoint
+        title="Osteoarthritis management portal API",
+        description="A comprehensive API for osteoarthritis disease management research data",
+        doc='/docs/',
+        authorizations=authorizations,
+        security='Bearer Auth'
     )
+
+    # Import namespaces AFTER creating the API
+    from .auth.routes import auth_ns
+    from .organisms.routes import organisms_ns
+    from .organismUpload.routes import organismUpload_ns
+    from .pdbUpload.routes import pdbUpload_ns
+    # from .uploads.routes import uploads_ns
+    # from .imports.routes import imports_ns
     
-    # Register namespaces
+    # Register namespaces with the API instance
     api.add_namespace(auth_ns, path='/api/users')
     api.add_namespace(organisms_ns, path='/api/organisms')
+    api.add_namespace(organismUpload_ns, path='/api/csv-import')
+    api.add_namespace(pdbUpload_ns, path='/api')
     # api.add_namespace(uploads_ns, path='/api/uploads') 
     # api.add_namespace(imports_ns, path='/api/imports')
+
+    return api
+
 
 
 def register_error_handlers(app):
@@ -92,37 +123,48 @@ def register_error_handlers(app):
         return {
             "success": False,
             "msg": "Bad request",
-            "error": str(error)
+            "error": str(error),
+            "documentation": "/docs"
         }, 400
     
     @app.errorhandler(401)
     def unauthorized(error):
         return {
             "success": False,
-            "msg": "Unauthorized access"
+            "msg": "Unauthorized access",
+            "documentation": "/docs"
         }, 401
     
     @app.errorhandler(403)
     def forbidden(error):
         return {
             "success": False,
-            "msg": "Forbidden"
+            "msg": "Forbidden",
+            "documentation": "/docs"
         }, 403
     
     @app.errorhandler(404)
     def not_found(error):
         return {
             "success": False,
-            "msg": "Resource not found"
+            "msg": "Resource not found",
+            "documentation": "/docs",
+            "available_endpoints": {
+                "authentication": "/api/auth",
+                "organisms": "/api/organisms",
+                "data_upload": "/api/upload", 
+                "pdb_management": "/api/pdb",
+                "documentation": "/docs"
+            }
         }, 404
     
     @app.errorhandler(500)
     def internal_error(error):
         return {
             "success": False,
-            "msg": "Internal server error"
+            "msg": "Internal server error",
+            "documentation": "/docs"
         }, 500
-
 
 def register_request_handlers(app):
     '''Register before/after request handlers'''
