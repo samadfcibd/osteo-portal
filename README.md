@@ -2,7 +2,7 @@
 
 A comprehensive full-stack web application for managing osteoarthritis research data, featuring plant/molecule data filtering by disease stage and region. The platform enables researchers to explore biomolecular relationships and clinical trial stages for osteoarthritis treatment.
 
-![Logo](https://github.com/samadfcibd/osteo-portal/blob/samad/frontend/src/assets/osteo-ui.png)
+![Logo](https://github.com/samadfcibd/osteo-portal/blob/master/react-ui/src/assets/images/homepage.png)
 
 
 ## 🚀 Features
