@@ -1,210 +1,276 @@
-# [React Flask Authentication](https://blog.appseed.us/react-flask-authentication/)
+# 🌿 Osteoarthritis Disease Management Portal
 
-Open-source full-stack seed project that uses a `React UI` powered by a simple `Flask API Server`. **[React Flask Authentication](https://blog.appseed.us/react-flask-authentication/)** sample can be used to bootstrap fast a new project using a tested `development-ready` stack or simply for eLearning purposes by beginners. For newcomers, **React** is a popular Javascript library for coding user interfaces baked by Facebook and Flask is a leading web framework written in Python. 
+A comprehensive full-stack web application for managing osteoarthritis research data, featuring plant/molecule data filtering by disease stage and region. The platform enables researchers to explore biomolecular relationships and clinical trial stages for osteoarthritis treatment.
 
-- 👉 [React Flask Authentication](https://react-flask-authentication.appseed-srv1.com/) - LIVE Demo
-- 👉 LIVE [Support](https://react-flask-authentication.appseed-srv1.com/) via [Discord](https://discord.gg/fZC6hup) - provided by [App-Generator](https://app-generator.dev/)
+![Logo](https://github.com/samadfcibd/osteo-portal/blob/samad/frontend/src/assets/osteo-ui.png)
+
+
+## 🚀 Features
+
+- **🔬 Research Data Management** - Organize and query biomolecule data with advanced filtering
+- **👨‍💼 Admin Dashboard** - Professional interface built with [Berry Dashboard](https://berrydashboard.com/)
+- **📊 Data Visualization** - Interactive charts and data exploration with amCharts integration
+- **🔐 Authentication System** - JWT-based secure user authentication and authorization
+- **📁 File Upload System** - Support for CSV data imports and PDB molecular files
+- **🎯 Clinical Stage Filtering** - Filter data by clinical trial stages and disease progression
+- **🌐 Single-Port Deployment** - Simplified deployment architecture without CORS configuration
+- **🔍 Advanced Search** - Intelligent search across molecules, plants, and clinical data
+
+<!-- ## 🛠️ Tech Stack
+
+### Frontend
+- **React 18** - Main frontend framework
+- **Berry Dashboard** - Admin panel template and UI components
+- **amCharts** - Data visualization library
+- **React Router** - Client-side routing
+
+### Backend  
+- **Flask** - Python web framework
+- **SQLAlchemy** - Database ORM
+- **JWT** - Authentication tokens
+- **MySQL** - Database management -->
 
 <br />
 
-## ✨ **Start the Flask API** via `Docker`
+## 🏗️ Architecture
+
+The application follows a **two-tier architecture** with decoupled frontend and backend:
+
+Frontend (React) ←→ Backend (Flask API) ←→ Database (MySQL)
+
+<br />
+
+## 📁 Project Structure
+
+```plaintext
+OSTEO-PORTAL/
+├── 📂 api-server-flask/          # Flask Backend API
+│   ├── 📂 api/                  # Flask source code (routes, models, business logic)
+│   ├── 📂 env/                  # Python virtual environment
+│   ├── 📂 uploads/              # File upload directory
+│   ├── 📄 .env                  # Backend environment variables
+│   ├── 📄 requirements.txt      # Python dependencies
+│   ├── 📄 run.py               # Main application entry point
+│   └── 📄 gunicorn-rfg.py      # Production server configuration
+│
+├── 📂 DB/                       # Database schema and migrations
+│   └── 📄 osteoarthritis_db.sql # MySQL database dump
+│
+├── 📂 react-ui/                 # React Frontend Application
+│   ├── 📂 build/               # Production build files
+│   ├── 📂 node_modules/        # Node.js dependencies
+│   ├── 📂 public/              # Static assets
+│   ├── 📂 src/                 # React source code
+│   │   ├── 📂 components/      # Reusable UI components
+│   │   ├── 📂 pages/           # Application pages
+│   │   ├── 📂 assets/          # Images, styles, fonts
+│   │   └── 📂 utils/           # Helper functions
+│   ├── 📄 .env                 # Frontend environment variables
+│   ├── 📄 package.json         # Node.js dependencies and scripts
+│   └── 📄 .prettierrc          # Code formatting configuration
+│
+├── 📄 LICENSE.md               # Project license
+└── 📄 README.md               # Project documentation
+```
+
+<br />
+
+## ⚙️ Prerequisites
+Before installation, ensure you have the following installed:
+
+- 🐍 Python 3.8+ - Backend runtime
+- 🟢 Node.js 14+ - Frontend runtime (npm or yarn)
+- 🗄️ MySQL 5.7+ - Database server
+- 🌐 Git - Version control
+- 💻 Git Bash or PowerShell - Command line tools (Windows)
+
+<br />
+
+## 🛠️ Installation & Setup
+
+### 🔧 Backend Setup (Flask API)
+
+#### Setup and Run Flask (Backend)
 
 ```bash
-$ cd api-server-flask
-$ docker-compose up --build  # Start with Docker
+# 1. Navigate to backend directory
+cd api-server-flask
+
+# 2. Create and activate virtual environment
+virtualenv env (or python -m venv env)
+
+# On Linux/Mac:
+source env/bin/activate
+
+# On Windows:
+env\Scripts\activate
+
+# 3. Install Python dependencies
+pip install -r requirements.txt
+
+# 4. Configure environment variables
+cp .env.example .env
+# Edit .env with your database credentials and settings. 
+# - Database credentials
+# - Secret key
+# - API settings
 ```
 
-At this point, the API should be up & running at `http://localhost:5000`, and we can test the interface using POSTMAN or `curl`.
 
-<br />
+#### Database Setup (MySQL):
 
-## ✨ **Start the React UI** (use another terminal)
+We are using mysql DB. There is a folder at root named `DB` where you will find the whole mysql db file. Just import the database and update the DB credentials into `.env` inside `api-server-flask`
 
-> 👉 **Step 1** - Once the project is downloaded, change the directory to `react-ui`. 
+#### Environment Configuration (.env):
 
 ```bash
-$ cd react-ui
+# Flask Configuration
+FLASK_ENV=development
+SECRET_KEY=your-secret-key-here
+DEBUG=True
+
+# Database Configuration (MySQL)
+DB_ENGINE=mysql+pymysql
+DB_HOST=127.0.0.1
+DB_NAME=osteoarthritis_db
+DB_USERNAME=your_username
+DB_PASS=your_password
+DB_PORT=3306
+
+# File Upload
+UPLOAD_FOLDER=uploads
+PDB_FOLDER=pdb_files
 ```
 
-<br >
+<br />
 
-> 👉 **Step 2** - Install dependencies via NPM or yarn
+### ⚛️ Frontend Setup (React UI)
+
+#### Setup & Run React (Frontend)
+```bash
+# 1. Navigate to frontend directory
+cd react-ui
+
+# 2. Install dependencies
+npm install
+# or using yarn
+yarn install
+
+# 3. Configure environment variables
+cp env.example .env
+# Edit .env with your API configuration
+
+```
+
+#### Environment Configuration (.env):
 
 ```bash
-$ npm i
-// OR
-$ yarn
+REACT_APP_API_URL=http://localhost:5000
+REACT_APP_ENV=development
+REACT_APP_VERSION=1.0.0
 ```
 
 <br />
 
-> 👉 **Step 3** - Start in development mode
+### 🚀 Running the Application
+
+#### 🔄 Development Mode
+
+**Start Backend Server:**
+```bash
+cd api-server-flask
+flask run
+```
+
+📡 API Server: http://localhost:5000
+
+**Start Frontend Development Server:**
+```bash
+cd react-ui
+npm start
+```
+🌐 React UI: http://localhost:3000
+
+#### 🏗️ Production Deployment
+
+**Backend Production:**
+
+1. Use Gunicorn for production server
 
 ```bash
-$ npm run start 
-// OR
-$ yarn start
+cd api
+gunicorn -c gunicorn-rfg.py run:app
 ```
 
-Once all the above commands are executed, the `React UI` should be visible in the browser. By default, the app redirects the guest users to authenticate. 
-After we register a new user and signIN, all the private pages become accessible. 
+2. Configure Nginx (see api/nginx/ for configuration examples)
 
-<br />
 
-![React Flask Authentication - Open-source full-stack seed project crafted by CodedThemes and AppSeed.](https://user-images.githubusercontent.com/51070104/137620059-07547eb2-0e7c-45e3-b825-67f5c72e4d3e.gif)
+**Frontend Production Build:**
 
-<br />
 
-## ✨ General Information
-
-The product is built using a `two-tier` pattern where the React frontend is decoupled logically and physically from the API backend. In order to use the product in a local environment, a few simple steps are required: 
-
-- `Compile and start` the **Flask API Backend**
-  - be default the server starts on port `5000`
-- `Compile and start` the **React UI**
-  - UI will start on port `3000` and expects a running backend on port `5000`
-- `Configuration` (Optional)
-  - Change the API port
-  - Configure the API port used by the React UI to communicate with the backend 
-
-<br />
-
-## ✨ Manual build
-
-> 👉 **Start the Flask API** 
+1. Create production build
 
 ```bash
-$ cd api-server-flask
-$ 
-$ # Create a virtual environment
-$ virtualenv env
-$ source env/bin/activate
-$
-$ # Install modules
-$ pip install -r requirements.txt
-$
-$ # Set Up the Environment
-$ export FLASK_APP=run.py
-$ export FLASK_ENV=development
-$ 
-$ # Start the API
-$ flask run 
+cd react-ui
+npm run build
+# or
+yarn build
 ```
 
-<br />
-
-> 👉 **Compile & start the React UI**
-
-```bash
-$ cd react-ui
-$
-$ # Install Modules
-$ yarn
-$
-$ # Start for development (LIVE Reload)
-$ yarn start 
-```
+2. Serve built files using a web server like Nginx
 
 <br />
 
-### Configuration (Optional)
+## 🐛 Troubleshooting
 
-> Change the port exposed by the Flask API
+### Common Issues & Solutions
+1. **Port already in use:** Change ports in configuration or kill existing processes
+2. **Module not found:** Reinstall dependencies using `pip install -r requirements.txt` or `npm install`
+3. **Environment variables not loading:** Ensure `.env` files are in correct directories
+4. **Database connection failed:** Verify MySQL credentials in `.env` file
+5. **CORS errors:** Verify API URL in frontend `.env` matches running backend
 
-```bash
-$ flask run --port 5001
-```
-
-Now, the API can be accessed on port `5001`
-
-<br />
-
-> Update the API port used by the React Frontend
-
-**API Server URL** - `src/config/constant.js` 
-
-```javascript
-const config = {
-    ...
-    API_SERVER: 'http://localhost:5000/api/'  // <-- The magic line
-};
-```
+### Debugging Tips
+1. Check server logs for detailed error messages
+2. Verify database connection using MySQL client
+3. Confirm virtual environment is activated for Python
+4. Clear browser cache if facing frontend issues
 
 <br />
 
-## ✨ API
+## 🤝 Contributing
+We welcome contributions! Please follow these steps:
 
-For a fast set up, this [POSTMAN](https://docs.appseed.us/boilerplate-code/api-server/api-unified-definition) definition can be used.
+1. 🍴 Fork the repository
 
-> **Register** - `api/users/register` (**POST** request)
+2. 🌿 Create a feature branch (git checkout -b feature/amazing-feature)
 
-```
-POST api/users/register
-Content-Type: application/json
+3. 💾 Commit your changes (git commit -m 'Add amazing feature')
 
-{
-    "username":"test",
-    "password":"pass", 
-    "email":"test@appseed.us"
-}
-```
+4. 📤 Push to the branch (git push origin feature/amazing-feature)
+
+5. 🔀 Open a Pull Request
 
 <br />
 
-> **Login** - `api/users/login` (**POST** request)
+## 📞 Support
+For support and questions:
 
-```
-POST /api/users/login
-Content-Type: application/json
-
-{
-    "password":"pass", 
-    "email":"test@appseed.us"
-}
-```
+📧 Email: samadocpl@gmail.com or humayun.112358@gmail.com
 
 <br />
 
-> **Logout** - `api/users/logout` (**POST** request)
+## 🙏 Acknowledgments
 
-```
-POST api/users/logout
-Content-Type: application/json
-authorization: JWT_TOKEN (returned by Login request)
-
-{
-    "token":"JWT_TOKEN"
-}
-```
+### Third-Party Components
+- **[Berry Dashboard](https://berrydashboard.com/)** - Open-source React admin template for the backend administration interface
+- **amCharts** - Data visualization components
+- **Heroicons** - UI icon library
 
 <br />
 
-## ✨ Product UI
+## 📜 License
 
-> React Flask Authentication - Login 
+This project is licensed under the MIT License - see the LICENSE.md file for details.
 
-![React Flask Authentication - Login.](https://user-images.githubusercontent.com/51070104/141444378-763ca3fb-c18c-4558-9730-b42a341a7b22.jpg)
-
-<br />
-
-> React Flask Authentication - Icons
-
-![React Flask Authentication - Icons.](https://user-images.githubusercontent.com/51070104/141444472-8c966396-69dc-46c3-835e-b64329fdbf7d.jpg)
-
-<br />
-
-> React Flask Authentication - Colors
-
-![React Flask Authentication - Colors.](https://user-images.githubusercontent.com/51070104/141444532-46a3bcd0-841b-4725-aa82-122569cd678a.jpg)
-
-<br />
-
-## ✨ Links & Resources
-
-- Ask for [Support](https://appseed.us/support) on [Discord](https://discord.gg/fZC6hup)
-- See for [React Starters](https://app-generator.dev/product/?search=react) - index provided by [App-Generator](https://app-generator.dev/)
-
-<br />
-
----
-**[React Flask Authentication](https://blog.appseed.us/react-flask-authentication/)** - Open-source full-stack seed project provided by **[App-Generator](https://app-generator.dev/)**
+Built for educational and research purposes in osteoarthritis disease management.
