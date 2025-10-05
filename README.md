@@ -1,6 +1,11 @@
 # 🌿 Osteoarthritis Disease Management Portal
 
+> **Academic Research Project** - Master of Science in Computer Science  
+> **University of Rostock** · Faculty of Computer Science and Electrical Engineering  
+> *A comprehensive full-stack web application developed as part of the Master's curriculum*
+
 A comprehensive full-stack web application for managing osteoarthritis research data, featuring plant/molecule data filtering by disease stage and region. The platform enables researchers to explore biomolecular relationships and clinical trial stages for osteoarthritis treatment.
+
 
 ![Logo](https://github.com/samadfcibd/osteo-portal/blob/master/react-ui/src/assets/images/homepage.png)
 
@@ -262,11 +267,17 @@ For support and questions:
 
 ## 🙏 Acknowledgments
 
+### Academic Guidance
+- University of Rostock - Faculty of Computer Science and Electrical Engineering
+- [Prof. Dr. Shailendra Gupta](https://www.sbi.uni-rostock.de/team/detail/shailendra-gupta) - Project supervision and guidance
+
 ### Third-Party Components
 - **[Berry Dashboard](https://berrydashboard.com/)** - Open-source React admin template for the backend administration interface
 - **amCharts** - Data visualization components
 - **Heroicons** - UI icon library
 
+### Technical Resources
+Open-source communities and documentation
 <br />
 
 ## 📜 License
@@ -274,3 +285,11 @@ For support and questions:
 This project is licensed under the MIT License - see the LICENSE.md file for details.
 
 Built for educational and research purposes in osteoarthritis disease management.
+
+Academic Use: This project is developed for educational purposes as part of the Master's program at University of Rostock.
+
+
+<br/>
+<div align="center">
+🌟 If you find this project helpful for academic purposes, please give it a star!
+</div>
