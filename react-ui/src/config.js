@@ -13,7 +13,9 @@ const config = {
     defaultPath: '/organism-upload',
     fontFamily: `'Roboto', sans-serif`,
     borderRadius: 12,
-    API_SERVER: BACKEND_SERVER
+    API_SERVER: BACKEND_SERVER,
+    REACT_APP_PUBLIC_URL: process.env.REACT_APP_PUBLIC_URL || 'http://localhost:3000/',
 };
+
 
 export default config;
